@@ -1,0 +1,5 @@
+CREATE TABLE source (
+  id SERIAL PRIMARY KEY,
+  lang VARCHAR NOT NULL,
+  src VARCHAR NOT NULL
+)
