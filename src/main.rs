@@ -7,53 +7,59 @@ extern crate dotenv;
 pub mod models;
 pub mod schema;
 
+use rocket::serde::json::Json;
+use rocket_okapi::{openapi, openapi_get_routes, swagger_ui::*};
+
 use diesel::prelude::*;
 use dotenv::dotenv;
-use rocket_dyn_templates::Template;
-use serde::Serialize;
 use std::env;
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-}
-
-#[derive(Serialize, Debug)]
-struct Endpoint<'a> {
-    method: &'a str,
-}
-
-#[derive(Serialize, Debug)]
-struct Docs<'a> {
-    routes: Vec<&'a Endpoint<'a>>,
-}
-
-/* ROUTES --- --- ---*/
-#[get("/")]
-fn index() -> Template {
-    let a = Endpoint { method: "a" };
-
-    let context = Docs { routes: vec![&a] };
-    Template::render("docs", &context)
-}
-
+#[openapi]
 #[post("/source")]
-fn new_source() -> &'static str {
-    "TODO - new source!"
+fn new_source() -> Json<models::Source> {
+    Json(models::Source {
+        id: 1,
+        lang: "lang",
+        src: "src",
+    })
 }
 
+#[openapi]
+#[get("/source/<id>")]
+fn get_source(id: i32) -> Json<models::Source> {
+    Json(models::Source {
+        id: 1,
+        lang: "lang",
+        src: "src",
+    })
+}
+
+#[openapi]
 #[put("/source/<id>")]
-fn update_source(id: i32) -> &'static str {
-    "TODO - update source!"
+fn update_source(id: i32) -> Json<models::Source> {
+    Json(models::Source {
+        id: 1,
+        lang: "lang",
+        src: "src",
+    })
 }
 
-/* Main --- --- ---*/
+#[openapi]
+#[delete("/source/<id>")]
+fn delete_source(id: i32) {}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![index])
-        .attach(Template::fairing())
+        .mount(
+            "/",
+            openapi_get_routes![new_source, get_source, update_source, delete_source],
+        )
+        .mount(
+            "/docs",
+            make_swagger_ui(&SwaggerUIConfig {
+                url: "../openapi.json".to_owned(),
+                ..Default::default()
+            }),
+        )
 }
