@@ -1087,6 +1087,17 @@ dependencies = [
 
 [[package]]
 name = "okapi"
+version = "0.6.0-alpha-1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb085e00daf8d75b9dbf0ffdb4738e69503e28898d9641fa8bdc6ad536c7bcf4"
+dependencies = [
+ "schemars 0.8.8",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "okapi"
 version = "0.7.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce66b6366e049880a35c378123fddb630b1a1a3c37fa1ca70caaf4a09f6e2893"
@@ -1535,7 +1546,7 @@ checksum = "0025aa04994af8cd8e1fcdd5a73579a395c941ae090ecb0a39b41cca7e237a20"
 dependencies = [
  "either",
  "log",
- "okapi",
+ "okapi 0.7.0-rc.1",
  "rocket",
  "rocket_okapi_codegen",
  "schemars 0.8.8",
@@ -1593,6 +1604,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dotenv",
+ "okapi 0.6.0-alpha-1",
  "rocket",
  "rocket_dyn_templates",
  "rocket_okapi",
