@@ -4,6 +4,7 @@ extern crate rocket;
 extern crate diesel;
 extern crate dotenv;
 
+pub mod guards;
 pub mod models;
 pub mod schema;
 
@@ -27,45 +28,21 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
-#[derive(Debug)]
-pub enum ApiError {
-    NotFound,
-    InternalServerError,
-}
-
-impl fmt::Display for ApiError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ApiError::NotFound => f.write_str("NotFound"),
-            ApiError::InternalServerError => f.write_str("InternalServerError"),
-        }
-    }
-}
-
-impl StdError for ApiError {
-    fn description(&self) -> &str {
-        match *self {
-            ApiError::NotFound => "Not found",
-            ApiError::InternalServerError => "Internal server error",
-        }
-    }
-}
-
 #[derive(Debug, FromFormField, JsonSchema)]
 enum Language {
     Javascript,
 }
 
-#[openapi]
+#[openapi(tag = "Sbox")]
 #[get("/sbox?<language>")]
 fn get_sbox(language: Language) {
     println!("{:?}", language);
     /* Return a sbox-wasm module */
 }
 
-#[openapi]
+#[openapi(tag = "Source")]
 #[get("/source/<id>")]
-fn get_source(id: i32) -> Result<Json<models::Source>, rocket::http::Status> {
+fn get_source(id: i32, _db: guards::DB) -> Result<Json<models::Source>, rocket::http::Status> {
     use self::schema::source::dsl::*;
     let connection = establish_connection();
     let s = source.find(id).first::<models::Source>(&connection);
@@ -77,15 +54,15 @@ fn get_source(id: i32) -> Result<Json<models::Source>, rocket::http::Status> {
     }
 }
 
-#[openapi]
+#[openapi(tag = "Source")]
 #[post("/source")]
 fn new_source() {}
 
-#[openapi]
+#[openapi(tag = "Source")]
 #[put("/source/<id>")]
 fn update_source(id: i32) {}
 
-#[openapi]
+#[openapi(tag = "Source")]
 #[delete("/source/<id>")]
 fn delete_source(id: i32) {}
 
