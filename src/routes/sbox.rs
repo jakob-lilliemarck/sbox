@@ -1,4 +1,4 @@
-use crate::db::test::Conn;
+use crate::db::Conn;
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::okapi::schemars::JsonSchema;
 use rocket_okapi::openapi;

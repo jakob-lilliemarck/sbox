@@ -1,17 +1,12 @@
-use crate::db::test::{test, Conn};
-use crate::models::source::Source;
-use crate::schema;
-use diesel::prelude::*;
-use rocket::http::Status;
+use crate::db;
+use crate::models::source::NewSource;
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
-use rocket_sync_db_pools::diesel;
 
 #[openapi(tag = "Source")]
 #[get("/source/<id>")]
-pub async fn read_source(conn: Conn, id: i32) /*-> Result<Json<Source>, Status>*/
-{
-    let r = conn.run(|c| test(c)).await;
+pub async fn read_source(conn: db::Conn, id: i32) {
+    let r = conn.run(move |c| db::source::read(c, &id)).await;
     match r {
         Ok(source) => println!("OK, FOUND!"),
         Err(err) => println!("ERR ERR ERR"),
@@ -19,8 +14,11 @@ pub async fn read_source(conn: Conn, id: i32) /*-> Result<Json<Source>, Status>*
 }
 
 #[openapi(tag = "Source")]
-#[post("/source")]
-pub fn create_source() {}
+#[post("/source", data = "<new_source>")]
+pub fn create_source(conn: db::Conn, new_source: Json<NewSource<'_>>) {
+    println!("IN ROUTE: {:?}", new_source.lang);
+    //let r = conn.run(|c| db::source::create(c));
+}
 
 #[openapi(tag = "Source")]
 #[put("/source/<id>")]

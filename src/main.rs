@@ -13,7 +13,7 @@ pub mod schema;
 #[launch]
 fn rocket() -> rocket::Rocket<rocket::Build> {
     rocket::build()
-        .attach(db::test::Conn::fairing())
+        .attach(db::Conn::fairing())
         .mount(
             "/",
             openapi_get_routes![
