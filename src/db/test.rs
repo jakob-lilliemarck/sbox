@@ -1,15 +1,18 @@
 extern crate rocket;
+use crate::models::source::Source;
+use diesel::prelude::*;
+use rocket::serde::json::Json;
 use rocket_okapi::gen::OpenApiGenerator;
 use rocket_okapi::request::{OpenApiFromRequest, RequestHeaderInput};
 use rocket_okapi::OpenApiError;
 use rocket_sync_db_pools::{database, diesel};
-use crate::schema::source;
 
 #[database("db")]
 pub struct Conn(diesel::PgConnection);
 
-pub fn test(conn: &mut diesel::PgConnection, id) -> Json<Source> {
-    source::table.find(id)
+pub fn test(conn: &mut diesel::PgConnection) -> Result<Source, diesel::result::Error> {
+    use crate::schema::source::dsl::*;
+    source.find(id).first::<Source>(&*conn)
 }
 
 impl OpenApiFromRequest<'static> for Conn {

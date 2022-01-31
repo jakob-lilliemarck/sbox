@@ -12,17 +12,10 @@ use rocket_sync_db_pools::diesel;
 pub async fn read_source(conn: Conn, id: i32) /*-> Result<Json<Source>, Status>*/
 {
     let r = conn.run(|c| test(c)).await;
-    println!("{}", r);
-    //let s = find(&conn, id);
-    //println!("{:?}", s)
-
-    /*let s = source.find(7).first::<Source>(&conn);
-    match s {
-        Ok(s) => Ok(Json(s)),
-        Err(err) => match err {
-            _ => Err(Status::NotFound),
-        },
-    }*/
+    match r {
+        Ok(source) => println!("OK, FOUND!"),
+        Err(err) => println!("ERR ERR ERR"),
+    }
 }
 
 #[openapi(tag = "Source")]
