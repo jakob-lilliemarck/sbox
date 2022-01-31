@@ -2,7 +2,6 @@ extern crate rocket;
 
 use crate::models::source::{NewSource, Source};
 use diesel::prelude::*;
-use rocket::serde::json::Json;
 use rocket_sync_db_pools::diesel;
 
 pub fn read(
@@ -13,11 +12,11 @@ pub fn read(
     source.find(source_id).first::<Source>(&*conn)
 }
 
-pub fn create(conn: &mut diesel::PgConnection, new_source: Json<NewSource>) {
+pub fn create<'a>(conn: &mut diesel::PgConnection, new_source: &'a NewSource) {
     use crate::schema::source;
     println!("IN DB: {:?}", new_source);
-    //diesel::insert_into(source::table)
-    //    .values(&new_source)
-    //    .get_result(&*conn)
-    //    .expect("Error saving new source")
+    diesel::insert_into(source::table)
+        .values(new_source)
+        .get_result(&*conn)
+        .expect("Error saving new source")
 }

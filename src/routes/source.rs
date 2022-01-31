@@ -15,15 +15,15 @@ pub async fn read_source(conn: db::Conn, id: i32) {
 
 #[openapi(tag = "Source")]
 #[post("/source", data = "<new_source>")]
-pub fn create_source(conn: db::Conn, new_source: Json<NewSource<'_>>) {
+pub async fn create_source(conn: db::Conn, new_source: Json<NewSource<'_>>) {
     println!("IN ROUTE: {:?}", new_source.lang);
-    //let r = conn.run(|c| db::source::create(c));
+    let r = conn.run(move |c| db::source::create(c, &new_source)).await;
 }
 
 #[openapi(tag = "Source")]
 #[put("/source/<id>")]
-pub fn update_source(id: i32) {}
+pub async fn update_source(id: i32) {}
 
 #[openapi(tag = "Source")]
 #[delete("/source/<id>")]
-pub fn delete_source(id: i32) {}
+pub async fn delete_source(id: i32) {}
