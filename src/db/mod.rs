@@ -1,6 +1,6 @@
-use rocket_okapi::gen::OpenApiGenerator;
-use rocket_okapi::request::{OpenApiFromRequest, RequestHeaderInput};
-use rocket_okapi::OpenApiError;
+use rocket_okapi::{
+    gen::OpenApiGenerator, request::OpenApiFromRequest, request::RequestHeaderInput, OpenApiError,
+};
 use rocket_sync_db_pools::{database, diesel};
 
 pub mod source;

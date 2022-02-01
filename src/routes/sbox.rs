@@ -1,9 +1,8 @@
 use crate::db::Conn;
 use rocket_okapi::okapi::schemars;
-use rocket_okapi::okapi::schemars::JsonSchema;
 use rocket_okapi::openapi;
 
-#[derive(Debug, FromFormField, JsonSchema)]
+#[derive(Debug, FromFormField, schemars::JsonSchema)]
 pub enum Language {
     Javascript,
 }
