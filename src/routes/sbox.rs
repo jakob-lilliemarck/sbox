@@ -10,7 +10,7 @@ pub enum Language {
 
 #[openapi(tag = "Sbox")]
 #[get("/sbox?<language>")]
-pub fn get_sbox(conn: Conn, language: Language) {
+pub fn get_sbox(_conn: Conn, language: Language) {
     println!("{:?}", language);
     /* Return a sbox-wasm module */
 }

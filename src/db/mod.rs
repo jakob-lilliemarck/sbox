@@ -10,9 +10,9 @@ pub struct Conn(diesel::PgConnection);
 
 impl OpenApiFromRequest<'static> for Conn {
     fn from_request_input(
-        gen: &mut OpenApiGenerator,
-        name: String,
-        required: bool,
+        _gen: &mut OpenApiGenerator,
+        _name: String,
+        _required: bool,
     ) -> Result<RequestHeaderInput, OpenApiError> {
         Ok(RequestHeaderInput::None)
     }

@@ -10,30 +10,45 @@ pub async fn read_source(conn: db::Conn, id: i32) -> Result<Json<Source>, Status
     let res = conn.run(move |c| db::source::read(c, &id)).await;
     match res {
         Ok(source) => Ok(Json(source)),
-        Err(err) => Err(Status::NotFound),
+        Err(_err) => Err(Status::NotFound),
     }
 }
 
 #[openapi(tag = "Source")]
 #[post("/source", data = "<new_source>")]
-pub async fn create_source(conn: db::Conn, new_source: Json<NewSource>) -> Json<Source> {
+pub async fn create_source(
+    conn: db::Conn,
+    new_source: Json<NewSource>,
+) -> Result<Json<Source>, Status> {
     let res = conn.run(move |c| db::source::create(c, &new_source)).await;
-    Json(res)
+    match res {
+        Ok(source) => Ok(Json(source)),
+        Err(_err) => Err(Status::InternalServerError),
+    }
 }
 
 #[openapi(tag = "Source")]
-#[put("/source/<source_id>", data = "<update_source>")]
-pub async fn update_source(conn: db::Conn, source_id: i32, update_source: Json<UpdateSource>) {
+#[put("/source/<id>", data = "<update_source>")]
+pub async fn update_source(
+    conn: db::Conn,
+    id: i32,
+    update_source: Json<UpdateSource>,
+) -> Result<Json<Source>, Status> {
     let res = conn
-        .run(move |c| db::source::update(c, &source_id, &update_source))
+        .run(move |c| db::source::update(c, &id, &update_source))
         .await;
+    match res {
+        Ok(source) => Ok(Json(source)),
+        Err(_err) => Err(Status::InternalServerError),
+    }
 }
 
 #[openapi(tag = "Source")]
-#[delete("/source/<source_id>")]
-pub async fn delete_source(conn: db::Conn, source_id: i32) {
-    let res = conn.run(move |c| db::source::delete(c, &source_id)).await;
+#[delete("/source/<id>")]
+pub async fn delete_source(conn: db::Conn, id: i32) -> Result<Status, Status> {
+    let res = conn.run(move |c| db::source::delete(c, &id)).await;
+    match res {
+        Ok(_num) => Ok(Status::Ok),
+        Err(_err) => Err(Status::InternalServerError),
+    }
 }
-
-use diesel::prelude::*;
-use rocket_sync_db_pools::diesel;
