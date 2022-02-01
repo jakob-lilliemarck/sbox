@@ -2,6 +2,7 @@
 extern crate rocket;
 #[macro_use]
 extern crate diesel;
+#[macro_use]
 extern crate celery;
 
 use rocket_okapi::{openapi_get_routes, swagger_ui::*};
@@ -20,7 +21,7 @@ fn rocket() -> rocket::Rocket<rocket::Build> {
     */
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
-    let res = match runtime.block_on(async {
+    let _res = match runtime.block_on(async {
         let my_app = sbox::celery::create_app();
 
         my_app.send_task(sbox::celery::add::new(1, 2)).await
