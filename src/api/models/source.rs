@@ -1,6 +1,8 @@
-use crate::schema::source;
+extern crate sbox;
+
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::okapi::schemars::JsonSchema;
+use sbox::schema::source;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, JsonSchema, Insertable)]

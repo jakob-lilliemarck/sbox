@@ -8,7 +8,6 @@ use rocket_okapi::{openapi_get_routes, swagger_ui::*};
 pub mod db;
 pub mod models;
 pub mod routes;
-pub mod schema;
 
 #[launch]
 fn rocket() -> rocket::Rocket<rocket::Build> {

@@ -1,5 +1,5 @@
 [package]
-name = "sbox-api"
+name = "sbox"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,9 +21,16 @@ features = ["diesel_postgres_pool"]
 
 [dependencies.rocket_okapi]
 version = "0.8.0-alpha-1"
-url = "https://github.com/GREsau/okapi/tree/master/rocket-okapi"
 features = ["swagger", "rapidoc"]
 
 [dependencies.diesel]
 version = "1.4.4"
 features = ["postgres"]
+
+[[bin]]
+name = "worker"
+path = "src/worker/main.rs"
+
+[[bin]]
+name = "api"
+path = "src/api/main.rs"
