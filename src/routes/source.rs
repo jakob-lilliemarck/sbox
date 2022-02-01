@@ -20,15 +20,16 @@ pub async fn create_source(conn: db::Conn, new_source: Json<NewSource>) -> Json<
 #[openapi(tag = "Source")]
 #[put("/source/<source_id>", data = "<update_source>")]
 pub async fn update_source(conn: db::Conn, source_id: i32, update_source: Json<UpdateSource>) {
-    println!("IN REQ: {:?}", update_source);
     let res = conn
         .run(move |c| db::source::update(c, &source_id, &update_source))
         .await;
 }
 
 #[openapi(tag = "Source")]
-#[delete("/source/<id>")]
-pub async fn delete_source(id: i32) {}
+#[delete("/source/<source_id>")]
+pub async fn delete_source(conn: db::Conn, source_id: i32) {
+    let res = conn.run(move |c| db::source::delete(c, &source_id)).await;
+}
 
 use diesel::prelude::*;
 use rocket_sync_db_pools::diesel;

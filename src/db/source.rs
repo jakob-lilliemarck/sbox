@@ -27,3 +27,10 @@ pub fn update(conn: &mut diesel::PgConnection, source_id: &i32, update_source: &
         .get_result::<Source>(conn);
     println!("DB RES {:?}", r);
 }
+
+pub fn delete(conn: &mut diesel::PgConnection, source_id: &i32) {
+    use crate::schema::source::dsl::*;
+    let r = diesel::delete(source.find(source_id))
+        .execute(conn)
+        .expect("Error deleting source");
+}
