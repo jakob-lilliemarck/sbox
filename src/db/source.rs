@@ -12,13 +12,10 @@ pub fn read(
     source.find(source_id).first::<Source>(&*conn)
 }
 
-pub fn create(conn: &mut diesel::PgConnection, new_source: &NewSource) {
+pub fn create(conn: &mut diesel::PgConnection, new_source: &NewSource) -> Source {
     use crate::schema::source;
-
-    println!("IN DB: {:?}", new_source);
-
-    let r = diesel::insert_into(source::table)
+    diesel::insert_into(source::table)
         .values(new_source)
-        .execute(conn)
-        .expect("Error saving new source");
+        .get_result::<Source>(conn)
+        .expect("Error saving new source")
 }
