@@ -1,5 +1,5 @@
 use crate::db;
-use crate::models::source::{NewSource, Source};
+use crate::models::source::{NewSource, Source, UpdateSource};
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
 
@@ -18,8 +18,13 @@ pub async fn create_source(conn: db::Conn, new_source: Json<NewSource>) -> Json<
 }
 
 #[openapi(tag = "Source")]
-#[put("/source/<id>")]
-pub async fn update_source(id: i32) {}
+#[put("/source/<source_id>", data = "<update_source>")]
+pub async fn update_source(conn: db::Conn, source_id: i32, update_source: Json<UpdateSource>) {
+    println!("IN REQ: {:?}", update_source);
+    let res = conn
+        .run(move |c| db::source::update(c, &source_id, &update_source))
+        .await;
+}
 
 #[openapi(tag = "Source")]
 #[delete("/source/<id>")]
