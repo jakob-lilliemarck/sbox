@@ -52,3 +52,9 @@ pub async fn delete_source(conn: db::Conn, id: i32) -> Result<Status, Status> {
         Err(_err) => Err(Status::InternalServerError),
     }
 }
+
+#[openapi(tag = "test")]
+#[get("/test")]
+pub async fn test() {
+    println!("TEST")
+}

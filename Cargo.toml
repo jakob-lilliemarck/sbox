@@ -9,6 +9,10 @@ diesel_migrations = "1.4.0"
 serde = "1.0.127"
 schemars = "0.7"
 okapi = "0.6.0-alpha-1"
+async-trait = "0.1"
+dotenv = "0.15.0"
+env_logger = "0.9"
+anyhow = "1.0"
 
 [dependencies.rocket]
 version = "0.5.0-rc.1"
@@ -26,6 +30,20 @@ features = ["swagger", "rapidoc"]
 [dependencies.diesel]
 version = "1.4.4"
 features = ["postgres"]
+
+[dependencies.tokio]
+version = "0.2.x"
+features = ["full"]
+
+[dependencies.celery]
+version = "0.3.1"
+
+[dev-dependencies]
+rmp-serde = "0.15"
+rmpv = { version = "1.0.0", features = ["with-serde"] }
+serde_yaml = "0.8"
+serde-pickle = "1.1"
+structopt = "0.3"
 
 [[bin]]
 name = "worker"
