@@ -1,13 +1,17 @@
 use crate::db;
 use crate::models::source::{NewSource, Source, UpdateSource};
+use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
 
 #[openapi(tag = "Source")]
 #[get("/source/<id>")]
-pub async fn read_source(conn: db::Conn, id: i32) -> Json<Source> {
+pub async fn read_source(conn: db::Conn, id: i32) -> Result<Json<Source>, Status> {
     let res = conn.run(move |c| db::source::read(c, &id)).await;
-    Json(res.unwrap())
+    match res {
+        Ok(source) => Ok(Json(source)),
+        Err(err) => Err(Status::NotFound),
+    }
 }
 
 #[openapi(tag = "Source")]
