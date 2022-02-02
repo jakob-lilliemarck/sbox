@@ -42,7 +42,7 @@ path = "src/worker/main.rs"
 
 [[bin]]
 name = "api"
-path = "src/api/main.rs"
+path = "src/api_source/main.rs"
 
 [[bin]]
 name = "beat"
