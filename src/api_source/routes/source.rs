@@ -10,10 +10,11 @@ use sbox::tasks::CeleryAppInstance;
 pub async fn read_source(
     conn: db::Conn,
     id: i32,
-    celery: CeleryAppInstance,
+    cel: CeleryAppInstance,
 ) -> Result<Json<Source>, Status> {
-    celery.app.send_task(sbox::tasks::add::new(1, 2)).await;
-
+    let task = || sbox::tasks::add::new(1, 2);
+    cel.test(task);
+    //celery.app.send_task(sbox::tasks::add::new(1, 2)).await;
     let res = conn.run(move |c| db::source::read(c, &id)).await;
     match res {
         Ok(source) => Ok(Json(source)),

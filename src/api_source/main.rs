@@ -37,16 +37,17 @@ fn rocket() -> rocket::Rocket<rocket::Build> {
     - Expose a function that takes an async closure as argument, and pass it as a request guard to the routes
     - Consider error-handling - what could go wrong?
     */
-    let mut runtime = tokio::runtime::Runtime::new().unwrap();
-
+    //let mut runtime = tokio::runtime::Runtime::new().unwrap();
+    /*
     let _res = match runtime.block_on(async {
+        println!("RUNNING BLOCK ON");
         let my_app = sbox::tasks::create_app();
 
         my_app.send_task(sbox::tasks::add::new(1, 2)).await
     }) {
         Ok(x) => Ok(x),
         Err(_) => Err(println!("Listener failure")),
-    };
+    };*/
     /*ENDOF TODO*/
 
     rocket::build()

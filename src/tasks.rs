@@ -18,8 +18,26 @@ pub fn create_app<'a>() -> &'a celery::Celery<AMQPBroker> {
     )
 }
 
-pub struct CeleryAppInstance {
-    pub app: &'static celery::Celery<AMQPBroker>,
+pub struct CeleryAppInstance;
+
+impl CeleryAppInstance {
+    pub fn test<F: FnOnce() -> celery::task::Signature<add>>(&self, get_task: F) {
+        /*
+        This works but effectivly creates a new tokio runtime on each call to test(). I'd much
+        prefer to instantiate the runtime at application start-up, create the Celery app, and
+        use a fairing to make it available as a RequestGuard.
+        */
+        let mut runtime = tokio::runtime::Runtime::new().unwrap();
+        let _res = match runtime.block_on(async {
+            let app = create_app();
+            let task = get_task();
+            app.send_task(task).await;
+            Ok::<String, String>("ok".to_string())
+        }) {
+            Ok(x) => Ok(x),
+            Err(_) => Err(println!("Listener failure")),
+        };
+    }
 }
 
 use rocket::request::{self, FromRequest, Request};
@@ -32,7 +50,7 @@ impl<'r> FromRequest<'r> for CeleryAppInstance {
     type Error = rocket::error::Error;
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        request::Outcome::Success(CeleryAppInstance { app: create_app() })
+        request::Outcome::Success(CeleryAppInstance {})
     }
 }
 
