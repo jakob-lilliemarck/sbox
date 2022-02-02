@@ -1,4 +1,5 @@
 #Worker app
+Consumes tasks from the task queue.
 
 ##Localhost
 Install RabbitMQ or AMQP compliant broker:

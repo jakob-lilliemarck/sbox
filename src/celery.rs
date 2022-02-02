@@ -4,7 +4,7 @@ use celery::{broker::AMQPBroker, TaskResult};
 
 #[celery::task]
 pub fn add(x: i32, y: i32) -> TaskResult<i32> {
-    println!("HEJ ADD ADD ADD");
+    println!("{:?} + {:?}", x, y);
     Ok(x + y)
 }
 

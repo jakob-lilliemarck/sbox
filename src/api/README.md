@@ -1,4 +1,5 @@
-# Api app
+# source api
+Http API to manage source resources.
 
 ## Localhost
 `cargo run --bin api`

@@ -1,4 +1,7 @@
+extern crate anyhow;
 extern crate celery;
+
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() {

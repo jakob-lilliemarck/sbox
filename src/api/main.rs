@@ -2,7 +2,6 @@
 extern crate rocket;
 #[macro_use]
 extern crate diesel;
-#[macro_use]
 extern crate celery;
 
 use rocket_okapi::{openapi_get_routes, swagger_ui::*};
