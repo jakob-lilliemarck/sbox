@@ -1,19 +1,27 @@
 extern crate anyhow;
 extern crate celery;
-use celery::RegularSchedule;
-use tokio::time::Duration;
+
+use anyhow::Result;
+use celery::beat::CronSchedule;
+use celery::broker::AMQPBroker;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let mut beat = celery::beat!(
-        broker = AMQP { std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://127.0.0.1:5672".into()) },
-        task_routes = [
-            "*" => "celery",
-        ],
-    );
+        broker = AMQPBroker { std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://127.0.0.1:5672".into()) },
+            tasks = [
+                "add" => {
+                    sbox::tasks::add,
+                    schedule = CronSchedule::from_string("*/1 * * * *")?,
+                    args = (1, 2),
+                },
+            ],
+            task_routes = [
+                "*" => "celery",
+            ],
+        ).await.expect("Error creating celery beat instance");
 
-    let add_schedule = RegularSchedule::new(Duration::from_secs(1));
-    beat.schedule_task(sbox::tasks::add::new(1, 2), add_schedule);
+    beat.start().await.expect("Error starting celery beat");
 
-    beat.start().await;
+    Ok(())
 }
