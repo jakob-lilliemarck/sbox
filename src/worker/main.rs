@@ -5,6 +5,6 @@ use anyhow::Result;
 
 #[tokio::main]
 async fn main() {
-    let my_app = sbox::celery::create_app();
+    let my_app = sbox::tasks::create_app();
     my_app.consume_from(&["celery"]).await.unwrap();
 }

@@ -10,6 +10,25 @@ pub mod db;
 pub mod models;
 pub mod routes;
 
+use rocket::fairing::{Fairing, Info, Kind};
+use rocket::{Data, Request};
+
+/* FAIRING EXAMPLE */
+struct ExampleFairing;
+
+#[rocket::async_trait]
+impl Fairing for ExampleFairing {
+    fn info(&self) -> Info {
+        Info {
+            name: "ExampleFairing",
+            kind: Kind::Request,
+        }
+    }
+
+    async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {}
+}
+/* ENDOF FAIRING EXAMPLE */
+
 #[launch]
 fn rocket() -> rocket::Rocket<rocket::Build> {
     /*
@@ -21,9 +40,9 @@ fn rocket() -> rocket::Rocket<rocket::Build> {
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
     let _res = match runtime.block_on(async {
-        let my_app = sbox::celery::create_app();
+        let my_app = sbox::tasks::create_app();
 
-        my_app.send_task(sbox::celery::add::new(1, 2)).await
+        my_app.send_task(sbox::tasks::add::new(1, 2)).await
     }) {
         Ok(x) => Ok(x),
         Err(_) => Err(println!("Listener failure")),
@@ -32,6 +51,7 @@ fn rocket() -> rocket::Rocket<rocket::Build> {
 
     rocket::build()
         .attach(db::Conn::fairing())
+        .attach(ExampleFairing {})
         .mount(
             "/",
             openapi_get_routes![

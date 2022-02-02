@@ -13,7 +13,7 @@ async fn main() {
     );
 
     let add_schedule = RegularSchedule::new(Duration::from_secs(1));
-    beat.schedule_task(sbox::celery::add::new(1, 2), add_schedule);
+    beat.schedule_task(sbox::tasks::add::new(1, 2), add_schedule);
 
     beat.start().await;
 }

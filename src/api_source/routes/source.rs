@@ -3,10 +3,17 @@ use crate::models::source::{NewSource, Source, UpdateSource};
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
+use sbox::tasks::CeleryAppInstance;
 
 #[openapi(tag = "Source")]
 #[get("/source/<id>")]
-pub async fn read_source(conn: db::Conn, id: i32) -> Result<Json<Source>, Status> {
+pub async fn read_source(
+    conn: db::Conn,
+    id: i32,
+    celery: CeleryAppInstance,
+) -> Result<Json<Source>, Status> {
+    celery.app.send_task(sbox::tasks::add::new(1, 2)).await;
+
     let res = conn.run(move |c| db::source::read(c, &id)).await;
     match res {
         Ok(source) => Ok(Json(source)),
