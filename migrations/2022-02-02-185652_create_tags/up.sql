@@ -1,0 +1,3 @@
+CREATE TABLE tags (
+  id VARCHAR(32) PRIMARY KEY
+)

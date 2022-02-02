@@ -1,0 +1,5 @@
+CREATE TABLE inputs (
+  id SERIAL PRIMARY KEY,
+  data VARCHAR NOT NULL,
+  tags VARCHAR NOT NULL
+)
