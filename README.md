@@ -1,5 +1,34 @@
 # Sbox - Sandbox untrusted code anywhere
 
+## localhost
+
+### Postgres
+pgSql config on linux (arch) defaults to:
+- `/var/lib/postgres`
+
+Create database:
+- `createdb sbox -U sbox`
+
+List databases:
+- `psql [db_name] -U [role]`
+
+List tables in database:
+1. `psql -d [db_name] -U [role]`
+2. `\dt`
+
+Drop database:
+- `dropdb [db_name] -U [role]`
+
+### Diesel
+Create migration directory and table (once):
+- `diesel setup`
+
+Create migration:
+- `diesel migration generate [migration_name]`
+
+Run migration:
+- `diesel migration run`
+
 ## Todo
 
 **DONE Celery app-instance request-guard and fairing:**
