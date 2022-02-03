@@ -13,6 +13,8 @@ anyhow = "1.0.53"
 celery = "0.4.0-rcn.11"
 log = "0.4"
 env_logger = "0.9"
+actix-web = "3"
+r2d2 = "0.8.9"
 
 [dependencies.rocket]
 version = "0.5.0-rc.1"
@@ -37,12 +39,16 @@ features = ["full"]
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 [[bin]]
-name = "worker"
-path = "src/worker/main.rs"
-
-[[bin]]
 name = "api"
 path = "src/api_source/main.rs"
+
+[[bin]]
+name = "api_tag"
+path = "src/api_tag/main.rs"
+
+[[bin]]
+name = "worker"
+path = "src/worker/main.rs"
 
 [[bin]]
 name = "beat"

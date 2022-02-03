@@ -1,4 +1,4 @@
-extern crate rocket;
+// extern crate rocket;
 extern crate sbox;
 
 use crate::models::script::{NewScript, Script, UpdateScript};
