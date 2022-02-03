@@ -2361,9 +2361,11 @@ dependencies = [
  "actix-web",
  "anyhow",
  "celery",
+ "derive_more",
  "diesel",
  "diesel_migrations",
  "env_logger",
+ "futures",
  "log",
  "okapi 0.6.0-alpha-1",
  "r2d2",
@@ -2372,6 +2374,7 @@ dependencies = [
  "rocket_sync_db_pools",
  "schemars 0.7.6",
  "serde",
+ "serde_json",
  "tokio 1.16.1",
 ]
 
