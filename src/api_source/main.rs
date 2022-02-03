@@ -17,10 +17,10 @@ async fn rocket() -> rocket::Rocket<rocket::Build> {
         .mount(
             "/",
             openapi_get_routes![
-                routes::source::create_source,
-                routes::source::read_source,
-                routes::source::update_source,
-                routes::source::delete_source
+                routes::script::create_script,
+                routes::script::read_script,
+                routes::script::update_script,
+                routes::script::delete_script
             ],
         )
         .mount(
