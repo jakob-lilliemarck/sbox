@@ -5,6 +5,7 @@ extern crate diesel;
 extern crate r2d2;
 
 pub mod db;
+pub mod errors;
 pub mod models;
 pub mod routes;
 
@@ -23,7 +24,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(routes::create_tag)
+            //.service(routes::create_tag)
             .service(routes::get_tags)
     })
     .bind("localhost:8001")?
