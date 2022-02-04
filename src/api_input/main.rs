@@ -23,9 +23,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(routes::create_tag)
-            .service(routes::get_tags)
-            .service(routes::delete_tag)
+            // todo - attach json error handling here..? se JsonConfig: https://docs.rs/actix-web/3.0.0-beta.3/actix_web/web/struct.JsonConfig.html
+            .service(routes::create_input)
+            .service(routes::get_input)
     })
     .bind("localhost:8001")?
     .run()

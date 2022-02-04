@@ -5,7 +5,6 @@ use sbox::schema::tag;
 
 use diesel::prelude::*;
 use diesel::result::{DatabaseErrorKind, Error};
-use rocket_sync_db_pools::diesel;
 
 pub fn create(conn: &diesel::PgConnection, new_tag: &Tag) -> Result<Tag, Error> {
     diesel::insert_into(tag::table)
@@ -29,4 +28,16 @@ pub fn create_if_none(conn: &diesel::PgConnection, tag: &Tag) -> Result<Tag, Err
 pub fn read(conn: &diesel::PgConnection, tag_id: &String) -> Result<Tag, Error> {
     use sbox::schema::tag::dsl::*;
     tag.find(tag_id).first::<Tag>(conn)
+}
+
+pub fn delete(conn: &diesel::PgConnection, tag_id: &String) -> Option<Error> {
+    use sbox::schema::tag::dsl::*;
+    match diesel::delete(tag.find(tag_id)).execute(conn) {
+        Ok(deleted_count) => match deleted_count {
+            // Return not found err if deleted count is 0
+            0 => Some(Error::NotFound),
+            _ => None,
+        },
+        Err(err) => Some(err),
+    }
 }

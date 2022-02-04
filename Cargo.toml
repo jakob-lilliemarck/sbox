@@ -42,12 +42,16 @@ features = ["full"]
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 [[bin]]
-name = "api"
-path = "src/api_source/main.rs"
+name = "api_script"
+path = "src/api_script/main.rs"
 
 [[bin]]
 name = "api_tag"
 path = "src/api_tag/main.rs"
+
+[[bin]]
+name = "api_input"
+path = "src/api_input/main.rs"
 
 [[bin]]
 name = "worker"

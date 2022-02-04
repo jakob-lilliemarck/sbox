@@ -2,6 +2,11 @@ use actix_web::{http::StatusCode, HttpResponse};
 use derive_more::Display;
 use serde::Serialize;
 
+#[derive(Serialize)]
+struct ErrorResponse<'a> {
+    error: Option<&'a str>,
+}
+
 #[derive(Debug, Display)]
 pub enum ServerError<'a> {
     #[display(fmt = "Not found")]
@@ -32,11 +37,6 @@ impl<'a> From<diesel::result::Error> for ServerError<'a> {
             _ => ServerError::Unknown,
         }
     }
-}
-
-#[derive(Serialize)]
-struct ErrorResponse<'a> {
-    error: Option<&'a str>,
 }
 
 impl<'a> actix_web::error::ResponseError for ServerError<'a> {
