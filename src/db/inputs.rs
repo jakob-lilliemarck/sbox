@@ -1,7 +1,6 @@
-extern crate sbox;
-
-use crate::models::{Input, Tag};
-use sbox::schema::*;
+use crate::models::inputs::Input;
+use crate::models::tags::Tag;
+use crate::schema::*;
 
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -13,7 +12,7 @@ pub fn create(conn: &diesel::PgConnection, new_input: &Input) -> Result<Input, E
 }
 
 pub fn read(conn: &diesel::PgConnection, input_id: &i32) -> Result<Input, Error> {
-    use sbox::schema::input::dsl::*;
+    use crate::schema::input::dsl::*;
     let test = input
         .inner_join(input_tag::table.inner_join(tag::table))
         .filter(id.eq(input_id))

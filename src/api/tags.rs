@@ -2,28 +2,12 @@ extern crate futures;
 extern crate sbox;
 extern crate serde;
 
-use crate::db;
-use crate::models::Tag;
+use sbox::db::tags::{create_if_none, delete, read};
+use sbox::models::tags::Tag;
 
-use actix_web::{delete, dev::Body, get, post, web, HttpRequest, HttpResponse, Responder};
-use futures::future::{ready, Ready};
+use actix_web::{delete, dev::Body, get, post, web, HttpResponse};
 use sbox::errors::ServerError;
 use sbox::utils::{get_conn, DbPool};
-
-/* TODO: MAKE GENERIC*/
-impl Responder for Tag {
-    type Error = ServerError<'static>;
-    type Future = Ready<Result<HttpResponse, ServerError<'static>>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(
-                serde_json::to_string(&self).expect("Error serializing response"),
-            )))
-    }
-}
-/* ENDOF: MAKE GENERIC */
 
 #[get("/tags/{id}")]
 pub async fn get_tags<'a>(
@@ -31,7 +15,7 @@ pub async fn get_tags<'a>(
     id: web::Path<String>,
 ) -> Result<Tag, ServerError<'a>> {
     let test = &pool.get().expect("Could not connect to db from pool.");
-    match db::read(&get_conn(pool), &id) {
+    match read(&get_conn(pool), &id) {
         Ok(tag) => Ok(tag),
         Err(err) => Err(err.into()),
     }
@@ -42,7 +26,7 @@ pub async fn create_tag<'a>(
     pool: web::Data<DbPool>,
     tag: web::Json<Tag>,
 ) -> Result<Tag, ServerError<'a>> {
-    match db::create_if_none(&get_conn(pool), &tag) {
+    match create_if_none(&get_conn(pool), &tag) {
         Ok(tag) => Ok(tag),
         Err(err) => Err(err.into()),
     }
@@ -53,7 +37,7 @@ pub async fn delete_tag<'a>(
     pool: web::Data<DbPool>,
     id: web::Path<String>,
 ) -> Result<HttpResponse, ServerError<'a>> {
-    match db::delete(&get_conn(pool), &id) {
+    match delete(&get_conn(pool), &id) {
         Some(err) => Err(err.into()),
         None => Ok(HttpResponse::Ok().body(Body::Empty)),
     }

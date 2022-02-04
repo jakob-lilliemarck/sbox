@@ -1,7 +1,5 @@
-extern crate sbox;
-
-use crate::models::Tag;
-use sbox::schema::tag;
+use crate::models::tags::Tag;
+use crate::schema::tag;
 
 use diesel::prelude::*;
 use diesel::result::{DatabaseErrorKind, Error};
@@ -26,12 +24,12 @@ pub fn create_if_none(conn: &diesel::PgConnection, tag: &Tag) -> Result<Tag, Err
 }
 
 pub fn read(conn: &diesel::PgConnection, tag_id: &String) -> Result<Tag, Error> {
-    use sbox::schema::tag::dsl::*;
+    use crate::schema::tag::dsl::*;
     tag.find(tag_id).first::<Tag>(conn)
 }
 
 pub fn delete(conn: &diesel::PgConnection, tag_id: &String) -> Option<Error> {
-    use sbox::schema::tag::dsl::*;
+    use crate::schema::tag::dsl::*;
     match diesel::delete(tag.find(tag_id)).execute(conn) {
         Ok(deleted_count) => match deleted_count {
             // Return not found err if deleted count is 0
