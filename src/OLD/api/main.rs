@@ -6,9 +6,9 @@ extern crate sbox;
 
 use actix_web::{App, HttpServer};
 
-//pub mod data;
-pub mod owners;
-//pub mod scripts;
+pub mod inputs;
+pub mod outputs;
+pub mod scripts;
 pub mod tags;
 
 #[actix_web::main]
@@ -24,10 +24,17 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(owners::owner_create)
-            .service(tags::tags_get_by_owner)
+            // inputs
+            .service(inputs::create_input)
+            .service(inputs::get_input)
+            .service(inputs::input_tag)
+            .service(inputs::create_input_and_tags)
+            // tags
+            .service(tags::create_tag)
+            .service(tags::get_tags)
+            .service(tags::delete_tag)
     })
-    .bind("localhost:8000")?
+    .bind("localhost:8001")?
     .run()
     .await
 }

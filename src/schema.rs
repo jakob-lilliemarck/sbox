@@ -1,57 +1,62 @@
 table! {
-    input (id) {
+    data (id) {
         id -> Int4,
-        data -> Varchar,
-    }
-}
-
-table! {
-    input_tag (input_id, tag_id) {
-        input_id -> Int4,
-        tag_id -> Varchar,
-    }
-}
-
-table! {
-    output (script_id, input_id) {
-        data -> Varchar,
+        value -> Varchar,
+        input_id -> Nullable<Int4>,
         script_id -> Int4,
-        input_id -> Int4,
+    }
+}
+
+table! {
+    data_tag (data_id, tag_id) {
+        data_id -> Int4,
+        tag_id -> Int4,
+    }
+}
+
+table! {
+    owner (id) {
+        id -> Int4,
+        name -> Varchar,
     }
 }
 
 table! {
     script (id) {
         id -> Int4,
-        lang -> Varchar,
         source -> Varchar,
+        owner_id -> Int4,
     }
 }
 
 table! {
     script_tag (script_id, tag_id) {
         script_id -> Int4,
-        tag_id -> Varchar,
+        tag_id -> Int4,
     }
 }
 
 table! {
     tag (id) {
-        id -> Varchar,
+        id -> Int4,
+        value -> Varchar,
+        public -> Bool,
+        owner_id -> Int4,
     }
 }
 
-joinable!(input_tag -> input (input_id));
-joinable!(input_tag -> tag (tag_id));
-joinable!(output -> input (input_id));
-joinable!(output -> script (script_id));
+joinable!(data -> script (script_id));
+joinable!(data_tag -> data (data_id));
+joinable!(data_tag -> tag (tag_id));
+joinable!(script -> owner (owner_id));
 joinable!(script_tag -> script (script_id));
 joinable!(script_tag -> tag (tag_id));
+joinable!(tag -> owner (owner_id));
 
 allow_tables_to_appear_in_same_query!(
-    input,
-    input_tag,
-    output,
+    data,
+    data_tag,
+    owner,
     script,
     script_tag,
     tag,

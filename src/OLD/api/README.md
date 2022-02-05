@@ -25,7 +25,7 @@
 ## Resources
 Resources are an abstraction on top of the db, it's not a 1 to 1 relationship!
 
-### Scripts
+### Script
 ```
 {
   id: i32,
@@ -61,7 +61,7 @@ dentifier of this data.
  - `tags` - Tags used to trigger associated functionality. (must be own tags for user created data).
  - `value` - json-serialized value of this record.
 
-### Tags
+### Tag
 ```
 {
   id: i32,
