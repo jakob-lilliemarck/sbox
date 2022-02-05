@@ -11,6 +11,12 @@ pub struct Tag {
     pub id: String,
 }
 
+impl Tag {
+    pub fn from_string(str: &String) -> Tag {
+        Tag { id: str.clone() }
+    }
+}
+
 impl Responder for Tag {
     type Error = ServerError<'static>;
     type Future = Ready<Result<HttpResponse, ServerError<'static>>>;

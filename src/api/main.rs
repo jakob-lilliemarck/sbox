@@ -27,6 +27,8 @@ async fn main() -> std::io::Result<()> {
             // inputs
             .service(inputs::create_input)
             .service(inputs::get_input)
+            .service(inputs::input_tag)
+            .service(inputs::create_input_and_tags)
             // tags
             .service(tags::create_tag)
             .service(tags::get_tags)
