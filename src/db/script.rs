@@ -1,5 +1,5 @@
 use crate::db::tag::{create_many, read_by_script};
-use crate::models::script::{NewScript, Script, ScriptTag, TaggedScript};
+use crate::models::script::{NewScript, Script, ScriptTag, TaggedScript, UpdateTaggedScript};
 use crate::models::tag::{NewTag, Tag};
 use crate::schema::{script, script_tag};
 
@@ -12,8 +12,6 @@ pub fn create(conn: &diesel::PgConnection, new_script: &NewScript) -> Result<Scr
         .get_result::<Script>(conn)
 }
 
-pub fn delete(conn: &diesel::PgConnection, script_id: &i32) {}
-
 pub fn create_script_tag(
     conn: &diesel::PgConnection,
     script_tag: &ScriptTag,
@@ -22,8 +20,6 @@ pub fn create_script_tag(
         .values(script_tag)
         .get_result::<ScriptTag>(conn)
 }
-
-pub fn delete_script_tag(conn: &diesel::PgConnection, script_tag: ScriptTag) {}
 
 pub fn create_tagged(
     conn: &diesel::PgConnection,
@@ -54,6 +50,29 @@ pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<Tagge
         }
         Err(err) => Err(err),
     }
+}
+
+pub fn update_tagged(
+    conn: &diesel::PgConnection,
+    tagged_script: &UpdateTaggedScript,
+    script_id: &i32,
+) {
+    use crate::schema::script::dsl::*;
+    let s = script.find(script_id).first::<Script>(conn);
+    let s_t = ScriptTag::belonging_to(&s)
+        .select(tag::all_columns)
+        .load::<Tag>(conn);
+    /*
+    TODO
+
+    1. split NewTagScript in Script and Vec<Tag>
+    2. create_if_none() for all tags, store returns in a var "tags".
+    3. filter() current ScriptTags
+    4. compare ScriptTags with ids in "tags" variable, delete any relations that's not present in the tags variable
+
+    Q:
+        -
+    */
 }
 
 pub fn delete_tagged(conn: &diesel::PgConnection, id_script: &i32) -> Result<(), Error> {

@@ -40,6 +40,12 @@ pub struct NewTaggedScript {
     pub tags: Vec<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UpdateTaggedScript {
+    pub source: String,
+    pub tags: Vec<Tag>,
+}
+
 // Intermediary conversion type to split TaggedScript to db table-row elements
 pub struct NewScriptAndTags(pub NewScript, pub Vec<NewTag>);
 
