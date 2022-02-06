@@ -27,6 +27,7 @@ async fn main() -> std::io::Result<()> {
             .service(owners::owner_create)
             .service(tags::tags_get_by_owner)
             .service(scripts::scripts_create)
+            .service(scripts::scripts_get_own)
     })
     .bind("localhost:8000")?
     .run()

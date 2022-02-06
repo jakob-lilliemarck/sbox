@@ -1,5 +1,6 @@
+use crate::models::script::{Script, ScriptTag};
 use crate::models::tag::{NewTag, Tag, TagList};
-use crate::schema::tag;
+use crate::schema::{script_tag, tag};
 
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -44,4 +45,11 @@ pub fn read_by_owner(conn: &diesel::PgConnection, id_owner: &i32) -> Result<TagL
         Ok(tags) => Ok(tags.into()),
         Err(err) => Err(err.into()),
     }
+}
+
+pub fn read_by_script(conn: &diesel::PgConnection, script: &Script) -> Result<Vec<Tag>, Error> {
+    ScriptTag::belonging_to(script)
+        .inner_join(tag::table)
+        .select(tag::all_columns)
+        .load::<Tag>(conn)
 }

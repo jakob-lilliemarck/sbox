@@ -3,7 +3,7 @@ table! {
         id -> Int4,
         value -> Varchar,
         input_id -> Nullable<Int4>,
-        script_id -> Int4,
+        script_id -> Nullable<Int4>,
     }
 }
 
@@ -53,11 +53,4 @@ joinable!(script_tag -> script (script_id));
 joinable!(script_tag -> tag (tag_id));
 joinable!(tag -> owner (owner_id));
 
-allow_tables_to_appear_in_same_query!(
-    data,
-    data_tag,
-    owner,
-    script,
-    script_tag,
-    tag,
-);
+allow_tables_to_appear_in_same_query!(data, data_tag, owner, script, script_tag, tag,);

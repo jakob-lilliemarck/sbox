@@ -1,6 +1,6 @@
 use crate::errors::ServerError;
 use crate::models::tag::{NewTag, Tag};
-use crate::schema::script;
+use crate::schema::*;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
@@ -23,14 +23,6 @@ pub struct NewScript {
     pub owner_id: i32,
 }
 
-// The resource the client posts/puts to the api
-#[derive(Debug, Deserialize, Serialize)]
-pub struct TaggedNewScript {
-    pub source: String,
-    pub owner_id: i32,
-    pub tags: Vec<String>,
-}
-
 // The resource send in response to the client
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TaggedScript {
@@ -40,12 +32,20 @@ pub struct TaggedScript {
     pub tags: Vec<String>,
 }
 
-// Intermediary conversion type
+// The resource the client posts/puts to the api
+#[derive(Debug, Deserialize, Serialize)]
+pub struct NewTaggedScript {
+    pub source: String,
+    pub owner_id: i32,
+    pub tags: Vec<String>,
+}
+
+// Intermediary conversion type to split TaggedScript to db table-row elements
 pub struct NewScriptAndTags(pub NewScript, pub Vec<NewTag>);
 
-impl<'a> From<&TaggedNewScript> for NewScriptAndTags {
-    fn from(new_tagged_script: &TaggedNewScript) -> NewScriptAndTags {
-        let TaggedNewScript {
+impl<'a> From<&NewTaggedScript> for NewScriptAndTags {
+    fn from(new_tagged_script: &NewTaggedScript) -> NewScriptAndTags {
+        let NewTaggedScript {
             source,
             owner_id,
             tags,
@@ -90,4 +90,31 @@ impl Responder for TaggedScript {
                 serde_json::to_string(&self).expect("Error serializing response"),
             )))
     }
+}
+
+// A struct to implement Responder on when returning an array of TaggedScripts
+#[derive(Debug, Deserialize, Serialize)]
+pub struct TaggedScriptList(pub Vec<TaggedScript>);
+
+impl Responder for TaggedScriptList {
+    type Error = ServerError<'static>;
+    type Future = Ready<Result<HttpResponse, ServerError<'static>>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(
+                serde_json::to_string(&self).expect("Error serializing response"),
+            )))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Insertable, Identifiable, Associations, Queryable)]
+#[belongs_to(Script)]
+#[belongs_to(Tag)]
+#[primary_key(script_id, tag_id)]
+#[table_name = "script_tag"]
+pub struct ScriptTag {
+    pub script_id: i32,
+    pub tag_id: i32,
 }

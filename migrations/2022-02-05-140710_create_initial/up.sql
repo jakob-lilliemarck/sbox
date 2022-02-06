@@ -22,7 +22,7 @@ CREATE TABLE data (
   id SERIAL PRIMARY KEY,
   value VARCHAR NOT NULL,
   input_id INTEGER,
-  script_id INTEGER NOT NULL,
+  script_id INTEGER,
   FOREIGN KEY (input_id) REFERENCES data (id),
   FOREIGN KEY (script_id) REFERENCES script (id)
 );
