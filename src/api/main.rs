@@ -8,7 +8,7 @@ use actix_web::{App, HttpServer};
 
 //pub mod data;
 pub mod owners;
-//pub mod scripts;
+pub mod scripts;
 pub mod tags;
 
 #[actix_web::main]
@@ -26,6 +26,7 @@ async fn main() -> std::io::Result<()> {
             .data(pool.clone())
             .service(owners::owner_create)
             .service(tags::tags_get_by_owner)
+            .service(scripts::scripts_create)
     })
     .bind("localhost:8000")?
     .run()

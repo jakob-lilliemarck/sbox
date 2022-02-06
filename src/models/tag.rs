@@ -14,12 +14,24 @@ pub struct Tag {
     pub owner_id: i32,
 }
 
+// NEW
 #[derive(Debug, Deserialize, Serialize, Insertable)]
 #[table_name = "tag"]
 pub struct NewTag {
     pub value: String,
     pub public: Option<bool>, // will it work?
     pub owner_id: i32,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct NewTagList {
+    new_tags: Vec<NewTag>,
+}
+
+impl From<Vec<NewTag>> for NewTagList {
+    fn from(new_tags: Vec<NewTag>) -> NewTagList {
+        NewTagList { new_tags }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
