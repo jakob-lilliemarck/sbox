@@ -13,6 +13,8 @@ pub enum ServerError<'a> {
     NotFound,
     #[display(fmt = "Bad request")]
     BadRequest(Option<&'a str>),
+    #[display(fmt = "Forbidden")]
+    Forbidden(Option<&'a str>),
     #[display(fmt = "Unknown error")]
     Unknown,
 }
@@ -24,6 +26,10 @@ impl<'a> ServerError<'a> {
             Self::BadRequest(cause) => match cause {
                 Some(cause) => Some(cause),
                 None => Some("Bad request"),
+            },
+            Self::Forbidden(cause) => match cause {
+                Some(cause) => Some(cause),
+                None => Some("Forbidden"),
             },
             Self::Unknown => Some("Unknown error"),
         }
@@ -44,6 +50,7 @@ impl<'a> actix_web::error::ResponseError for ServerError<'a> {
         match self {
             Self::NotFound => StatusCode::NOT_FOUND,
             Self::BadRequest(_cause) => StatusCode::BAD_REQUEST,
+            Self::Forbidden(_cause) => StatusCode::FORBIDDEN,
             Self::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

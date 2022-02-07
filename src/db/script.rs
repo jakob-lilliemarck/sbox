@@ -1,6 +1,6 @@
-use crate::db::tag::{create_many, read_by_script};
-use crate::models::script::{NewScript, Script, ScriptTag, TaggedScript, UpdateTaggedScript};
-use crate::models::tag::{NewTag, Tag};
+use crate::db::tag::read_by_script;
+use crate::models::script::{NewScript, Script, TaggedScript};
+use crate::models::script_tag::ScriptTag;
 use crate::schema::{script, script_tag};
 
 use diesel::prelude::*;
@@ -12,15 +12,7 @@ pub fn create(conn: &diesel::PgConnection, new_script: &NewScript) -> Result<Scr
         .get_result::<Script>(conn)
 }
 
-pub fn create_script_tag(
-    conn: &diesel::PgConnection,
-    script_tag: &ScriptTag,
-) -> Result<ScriptTag, Error> {
-    diesel::insert_into(script_tag::table)
-        .values(script_tag)
-        .get_result::<ScriptTag>(conn)
-}
-
+/*
 pub fn create_tagged(
     conn: &diesel::PgConnection,
     new_script: &NewScript,
@@ -40,7 +32,7 @@ pub fn create_tagged(
         Ok((script, tags))
     })
 }
-
+*/
 pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<TaggedScript, Error> {
     use crate::schema::script::dsl::*;
     match script.find(script_id).first::<Script>(conn) {

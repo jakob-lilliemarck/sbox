@@ -1,11 +1,11 @@
 use actix_web::{delete, dev::Body, get, post, put, web, HttpResponse};
-use sbox::db::script::{create_tagged, delete_tagged, read_by_owner, read_tagged};
+use sbox::db::script::{delete_tagged, read_by_owner, read_tagged};
 use sbox::errors::ServerError;
 use sbox::models::script::{
     NewScriptAndTags, NewTaggedScript, TaggedScript, TaggedScriptList, UpdateTaggedScript,
 };
 use sbox::utils::{get_conn, DbPool};
-
+/*
 #[post("/scripts")]
 pub async fn scripts_create<'a>(
     pool: web::Data<DbPool>,
@@ -17,6 +17,7 @@ pub async fn scripts_create<'a>(
         Err(err) => Err(err.into()),
     }
 }
+*/
 
 #[get("/scripts")]
 pub async fn scripts_get_own<'a>(

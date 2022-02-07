@@ -1,25 +1,24 @@
 use crate::errors::ServerError;
-use crate::schema::owner;
+use crate::models::script::Script;
+use crate::models::tag::Tag;
+use crate::schema::script_tag;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Identifiable)]
-#[table_name = "owner"]
-pub struct Owner {
-    pub id: i32,
-    pub name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, Insertable)]
-#[table_name = "owner"]
-pub struct NewOwner {
-    pub name: String,
+#[derive(Debug, Serialize, Deserialize, Insertable, Identifiable, Associations, Queryable)]
+#[belongs_to(Script)]
+#[belongs_to(Tag)]
+#[primary_key(script_id, tag_id)]
+#[table_name = "script_tag"]
+pub struct ScriptTag {
+    pub script_id: i32,
+    pub tag_id: i32,
 }
 
 // TODO - make generic!
-impl Responder for Owner {
+impl Responder for ScriptTag {
     type Error = ServerError<'static>;
     type Future = Ready<Result<HttpResponse, ServerError<'static>>>;
 

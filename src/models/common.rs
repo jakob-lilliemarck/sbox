@@ -1,25 +1,13 @@
 use crate::errors::ServerError;
-use crate::schema::owner;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Identifiable)]
-#[table_name = "owner"]
-pub struct Owner {
-    pub id: i32,
-    pub name: String,
-}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct IdList(pub Vec<i32>);
 
-#[derive(Debug, Deserialize, Serialize, Insertable)]
-#[table_name = "owner"]
-pub struct NewOwner {
-    pub name: String,
-}
-
-// TODO - make generic!
-impl Responder for Owner {
+impl Responder for IdList {
     type Error = ServerError<'static>;
     type Future = Ready<Result<HttpResponse, ServerError<'static>>>;
 

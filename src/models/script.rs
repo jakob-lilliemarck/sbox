@@ -48,7 +48,7 @@ pub struct UpdateTaggedScript {
 
 // Intermediary conversion type to split TaggedScript to db table-row elements
 pub struct NewScriptAndTags(pub NewScript, pub Vec<NewTag>);
-
+/*
 impl<'a> From<&NewTaggedScript> for NewScriptAndTags {
     fn from(new_tagged_script: &NewTaggedScript) -> NewScriptAndTags {
         let NewTaggedScript {
@@ -72,7 +72,7 @@ impl<'a> From<&NewTaggedScript> for NewScriptAndTags {
         NewScriptAndTags(new_script, new_tags)
     }
 }
-
+*/
 impl From<(Script, Vec<Tag>)> for TaggedScript {
     fn from(script_and_tags: (Script, Vec<Tag>)) -> TaggedScript {
         let (script, tags) = script_and_tags;
@@ -113,14 +113,4 @@ impl Responder for TaggedScriptList {
                 serde_json::to_string(&self).expect("Error serializing response"),
             )))
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Insertable, Identifiable, Associations, Queryable)]
-#[belongs_to(Script)]
-#[belongs_to(Tag)]
-#[primary_key(script_id, tag_id)]
-#[table_name = "script_tag"]
-pub struct ScriptTag {
-    pub script_id: i32,
-    pub tag_id: i32,
 }
