@@ -1,5 +1,5 @@
 use actix_web::{delete, dev::Body, get, post, put, web, HttpResponse};
-use sbox::db::script::{create_tagged, delete_tagged, read_by_owner, read_tagged, update_tagged};
+use sbox::db::script::{create_tagged, delete_tagged, read_by_owner, read_tagged};
 use sbox::errors::ServerError;
 use sbox::models::script::{
     NewScriptAndTags, NewTaggedScript, TaggedScript, TaggedScriptList, UpdateTaggedScript,
@@ -21,7 +21,7 @@ pub async fn scripts_create<'a>(
 #[get("/scripts")]
 pub async fn scripts_get_own<'a>(
     pool: web::Data<DbPool>,
-) -> Result<UpdateTaggedScript, ServerError<'a>> {
+) -> Result<TaggedScriptList, ServerError<'a>> {
     // TODO - owner_id should be derived from token in header during auth. Mocked to id = 1.
     match read_by_owner(&get_conn(pool), &1) {
         Ok(tagged_scripts) => Ok(TaggedScriptList(tagged_scripts)),
@@ -39,7 +39,7 @@ pub async fn scripts_get_id<'a>(
         Err(err) => Err(err.into()),
     }
 }
-
+/*
 #[put("/scripts/{id}")]
 pub async fn scripts_update<'a>(
     pool: web::Data<DbPool>,
@@ -49,7 +49,7 @@ pub async fn scripts_update<'a>(
     update_tagged(&get_conn(pool), &tagged_script, &id);
     HttpResponse::Ok().body("OK")
 }
-
+*/
 #[delete("/scripts/{id}")]
 pub async fn scripts_delete<'a>(
     pool: web::Data<DbPool>,

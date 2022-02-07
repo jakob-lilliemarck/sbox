@@ -1,3 +1,4 @@
+DROP TABLE owner_tag;
 DROP TABLE script_tag;
 DROP TABLE data_tag;
 

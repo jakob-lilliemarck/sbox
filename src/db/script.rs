@@ -51,7 +51,7 @@ pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<Tagge
         Err(err) => Err(err),
     }
 }
-
+/*
 pub fn update_tagged(
     conn: &diesel::PgConnection,
     tagged_script: &UpdateTaggedScript,
@@ -74,7 +74,7 @@ pub fn update_tagged(
         -
     */
 }
-
+*/
 pub fn delete_tagged(conn: &diesel::PgConnection, id_script: &i32) -> Result<(), Error> {
     conn.transaction(|| {
         use crate::schema::script::dsl::script;

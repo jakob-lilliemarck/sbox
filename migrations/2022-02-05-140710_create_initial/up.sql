@@ -7,7 +7,7 @@ CREATE TABLE tag (
   id SERIAL PRIMARY KEY,
   value VARCHAR(32) NOT NULL,
   public BOOLEAN NOT NULL DEFAULT false,
-  owner_id INTEGER NOT NULL,
+  owner_id INTEGER, -- should be nullable so tags may be "orphaned" upon delete
   FOREIGN KEY (owner_id) REFERENCES owner (id)
 );
 
@@ -43,3 +43,12 @@ CREATE TABLE script_tag (
   FOREIGN KEY (script_id) REFERENCES script (id),
   FOREIGN KEY (tag_id) REFERENCES tag (id)
 );
+
+-- "Tag subscriptions", may be owned by others but made "public"
+CREATE TABLE owner_tag (
+  owner_id INTEGER NOT NULL,
+  tag_id INTEGER NOT NULL,
+  CONSTRAINT pk_owner_tag PRIMARY KEY (owner_id, tag_id),
+  FOREIGN KEY (owner_id) REFERENCES owner (id),
+  FOREIGN KEY (tag_id) REFERENCES tag (id)
+)

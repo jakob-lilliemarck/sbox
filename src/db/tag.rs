@@ -1,6 +1,6 @@
 use crate::models::script::{Script, ScriptTag};
 use crate::models::tag::{NewTag, Tag, TagList};
-use crate::schema::{script_tag, tag};
+use crate::schema::tag;
 
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -9,6 +9,11 @@ pub fn create(conn: &diesel::PgConnection, new_owner: &NewTag) -> Result<Tag, Er
     diesel::insert_into(tag::table)
         .values(new_owner)
         .get_result::<Tag>(conn)
+}
+
+pub fn read(conn: &diesel::PgConnection, tag_id: &i32) -> Result<Tag, Error> {
+    use crate::schema::tag::dsl::*;
+    tag.find(tag_id).first::<Tag>(conn)
 }
 
 pub fn create_many(conn: &diesel::PgConnection, new_tags: &Vec<NewTag>) -> Result<Vec<Tag>, Error> {

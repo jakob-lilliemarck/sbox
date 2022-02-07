@@ -11,7 +11,7 @@ pub struct Tag {
     pub id: i32,
     pub value: String,
     pub public: bool,
-    pub owner_id: i32,
+    pub owner_id: Option<i32>,
 }
 
 // NEW
