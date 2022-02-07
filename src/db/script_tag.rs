@@ -58,11 +58,34 @@ pub fn script_tag_exist(
     .get_result(conn)
 }
 
-pub fn create_script_tag(
-    conn: &diesel::PgConnection,
-    script_tag: &ScriptTag,
-) -> Result<ScriptTag, Error> {
+pub fn create(conn: &diesel::PgConnection, script_tag: &ScriptTag) -> Result<ScriptTag, Error> {
     diesel::insert_into(schema::script_tag::table)
         .values(script_tag)
         .get_result::<ScriptTag>(conn)
+}
+
+pub fn create_many(
+    conn: &diesel::PgConnection,
+    script_tag_list: &Vec<ScriptTag>,
+) -> Result<(), Error> {
+    diesel::insert_into(schema::script_tag::table)
+        .values(script_tag_list)
+        .execute(conn)?;
+    Ok(())
+}
+
+pub fn delete(conn: &diesel::PgConnection, tag_script: &ScriptTag) -> Result<(), Error> {
+    use crate::schema::script_tag::dsl::*;
+    match diesel::delete(script_tag.find((tag_script.script_id, tag_script.tag_id))).execute(conn) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err),
+    }
+}
+
+pub fn delete_all_by_script_id(conn: &diesel::PgConnection, id_script: &i32) -> Result<(), Error> {
+    use crate::schema::script_tag::dsl::*;
+    match diesel::delete(script_tag.filter(script_id.eq(id_script))).execute(conn) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err),
+    }
 }

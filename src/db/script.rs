@@ -1,7 +1,10 @@
-use crate::db::tag::read_by_script;
-use crate::models::script::{NewScript, Script, TaggedScript};
+use crate::db;
+use crate::models::common::IdList;
+use crate::models::script::{
+    NewScript, NewTaggedScript, Script, TaggedScript, TaggedScriptList, UpdateScript,
+};
 use crate::models::script_tag::ScriptTag;
-use crate::schema::{script, script_tag};
+use crate::schema::script;
 
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -12,88 +15,78 @@ pub fn create(conn: &diesel::PgConnection, new_script: &NewScript) -> Result<Scr
         .get_result::<Script>(conn)
 }
 
-/*
+pub fn read(conn: &diesel::PgConnection, script_id: &i32) -> Result<Script, Error> {
+    use crate::schema::script::dsl::*;
+    script.find(script_id).get_result(conn)
+}
+
+pub fn update(
+    conn: &diesel::PgConnection,
+    update_script: &UpdateScript,
+    script_id: &i32,
+) -> Result<Script, Error> {
+    use crate::schema::script::dsl::*;
+    diesel::update(script.find(script_id))
+        .set(update_script)
+        .get_result::<Script>(conn)
+}
+
+pub fn delete(conn: &diesel::PgConnection, script_id: &i32) -> Result<(), Error> {
+    // TODO!
+    // Make sure all script_tag relations are deleted!!!
+    use crate::schema::script::dsl::*;
+    match diesel::delete(script.find(script_id)).execute(conn) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err),
+    }
+}
+
 pub fn create_tagged(
     conn: &diesel::PgConnection,
-    new_script: &NewScript,
-    new_tags: &Vec<NewTag>,
-) -> Result<(Script, Vec<Tag>), Error> {
+    new_tagged_script: &NewTaggedScript,
+    owner_id: &i32,
+) -> Result<TaggedScript, Error> {
+    let NewTaggedScript { source, tag_ids } = new_tagged_script;
+    let new_script = NewScript {
+        owner_id: owner_id.clone(),
+        source: source.clone(),
+    };
     conn.transaction(|| {
         let script = create(&conn, &new_script)?;
-        let tags = create_many(&conn, &new_tags)?;
-        // create script_tag relations - No unqiue-error since script is allways new record.
-        for tag in tags.iter() {
-            let script_tag = ScriptTag {
-                script_id: script.id,
-                tag_id: tag.id,
-            };
-            create_script_tag(conn, &script_tag)?;
-        }
-        Ok((script, tags))
+        let script_tag_list = tag_ids
+            .into_iter()
+            .map(|tag_id| ScriptTag {
+                tag_id: tag_id.clone(),
+                script_id: script.id.clone(),
+            })
+            .collect();
+        db::script_tag::create_many(&conn, &script_tag_list)?;
+        Ok((script, IdList(tag_ids.clone())).into())
     })
 }
-*/
+
 pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<TaggedScript, Error> {
-    use crate::schema::script::dsl::*;
-    match script.find(script_id).first::<Script>(conn) {
-        Ok(s) => {
-            let tags = read_by_script(&conn, &s).expect("Error reading script tags");
-            Ok((s, tags).into())
-        }
-        Err(err) => Err(err),
-    }
-}
-/*
-pub fn update_tagged(
-    conn: &diesel::PgConnection,
-    tagged_script: &UpdateTaggedScript,
-    script_id: &i32,
-) {
-    use crate::schema::script::dsl::*;
-    let s = script.find(script_id).first::<Script>(conn);
-    let s_t = ScriptTag::belonging_to(&s)
-        .select(tag::all_columns)
-        .load::<Tag>(conn);
-    /*
-    TODO
-
-    1. split NewTagScript in Script and Vec<Tag>
-    2. create_if_none() for all tags, store returns in a var "tags".
-    3. filter() current ScriptTags
-    4. compare ScriptTags with ids in "tags" variable, delete any relations that's not present in the tags variable
-
-    Q:
-        -
-    */
-}
-*/
-pub fn delete_tagged(conn: &diesel::PgConnection, id_script: &i32) -> Result<(), Error> {
     conn.transaction(|| {
-        use crate::schema::script::dsl::script;
-        use crate::schema::script_tag::dsl::{script_id, script_tag};
-        diesel::delete(script_tag.filter(script_id.eq(id_script))).execute(conn)?;
-        diesel::delete(script.find(id_script)).execute(conn)?;
-        Ok(())
+        let script = read(&conn, script_id)?;
+        let tag_ids = db::script_tag::read_tag_ids_by_script(&conn, &script)?;
+        Ok((script, tag_ids).into())
     })
 }
 
-pub fn read_by_owner(
+pub fn read_tagged_by_owner(
     conn: &diesel::PgConnection,
     id_owner: &i32,
-) -> Result<Vec<TaggedScript>, Error> {
-    use crate::schema::script::dsl::*;
-    match script.filter(owner_id.eq(id_owner)).load::<Script>(conn) {
-        Ok(scripts) => {
-            Ok(scripts
-                .into_iter()
-                .map(|s| {
-                    // Get tags for each script here & cast to TaggedScript!
-                    let tags = read_by_script(&conn, &s).expect("Error reading script tags"); // Unhandled error case? Ideally, errors reading tags should interrupt iteration
-                    (s, tags).into()
-                })
-                .collect::<Vec<TaggedScript>>())
-        }
-        // Propagate errors reading script
-        Err(err) => Err(err),
-    }
+) -> Result<TaggedScriptList, Error> {
+    conn.transaction(|| {
+        use crate::schema::script::dsl::*;
+        let owner_script_ids = script
+            .filter(owner_id.eq(id_owner))
+            .select(id)
+            .load::<i32>(conn)?;
+        let tagged = owner_script_ids
+            .iter()
+            .map(|id_script| read_tagged(&conn, &id_script))
+            .collect::<Result<Vec<TaggedScript>, Error>>()?;
+        Ok(TaggedScriptList(tagged))
+    })
 }

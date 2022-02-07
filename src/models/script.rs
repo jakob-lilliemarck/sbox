@@ -1,12 +1,12 @@
 use crate::errors::ServerError;
-use crate::models::tag::{NewTag, Tag};
+use crate::models::common::IdList;
+use crate::models::tag::Tag;
 use crate::schema::*;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 
-// 1:1 with the sql schema
 #[derive(Debug, Deserialize, Serialize, Queryable, Identifiable)]
 #[table_name = "script"]
 pub struct Script {
@@ -15,75 +15,59 @@ pub struct Script {
     pub owner_id: i32,
 }
 
-// Whats inserted in thr script-table on creation
-#[derive(Debug, Deserialize, Serialize, Insertable)]
+#[derive(Debug, Deserialize, Insertable)]
 #[table_name = "script"]
 pub struct NewScript {
     pub source: String,
     pub owner_id: i32,
 }
 
-// The resource send in response to the client
+#[derive(Debug, Deserialize, AsChangeset, Insertable)]
+#[table_name = "script"]
+pub struct UpdateScript {
+    pub source: String,
+}
+
+// Tagged script
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TaggedScript {
     pub id: i32,
     pub source: String,
     pub owner_id: i32,
-    pub tags: Vec<String>,
+    pub tag_ids: IdList,
 }
 
-// The resource the client posts/puts to the api
-#[derive(Debug, Deserialize, Serialize)]
-pub struct NewTaggedScript {
-    pub source: String,
-    pub owner_id: i32,
-    pub tags: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UpdateTaggedScript {
-    pub source: String,
-    pub tags: Vec<Tag>,
-}
-
-// Intermediary conversion type to split TaggedScript to db table-row elements
-pub struct NewScriptAndTags(pub NewScript, pub Vec<NewTag>);
-/*
-impl<'a> From<&NewTaggedScript> for NewScriptAndTags {
-    fn from(new_tagged_script: &NewTaggedScript) -> NewScriptAndTags {
-        let NewTaggedScript {
+impl From<(Script, IdList)> for TaggedScript {
+    fn from(script_tag_ids_tuple: (Script, IdList)) -> TaggedScript {
+        let (s, tag_ids) = script_tag_ids_tuple;
+        let Script {
+            id,
             source,
             owner_id,
-            tags,
-        } = new_tagged_script;
-
-        let new_script = NewScript {
-            source: source.clone(),
-            owner_id: owner_id.clone(),
-        };
-        let new_tags = tags
-            .into_iter()
-            .map(|value| NewTag {
-                public: Some(false),
-                value: value.clone(),
-                owner_id: owner_id.clone(),
-            })
-            .collect();
-        NewScriptAndTags(new_script, new_tags)
-    }
-}
-*/
-impl From<(Script, Vec<Tag>)> for TaggedScript {
-    fn from(script_and_tags: (Script, Vec<Tag>)) -> TaggedScript {
-        let (script, tags) = script_and_tags;
+        } = s;
         TaggedScript {
-            id: script.id,
-            source: script.source,
-            owner_id: script.owner_id,
-            tags: tags.into_iter().map(|tag| tag.value).collect(),
+            tag_ids,
+            id,
+            source,
+            owner_id,
         }
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub struct NewTaggedScript {
+    pub source: String,
+    pub tag_ids: Vec<i32>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateTaggedScript {
+    pub source: String,
+    pub tags: Vec<i32>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TaggedScriptList(pub Vec<TaggedScript>);
 
 impl Responder for TaggedScript {
     type Error = ServerError<'static>;
@@ -97,10 +81,6 @@ impl Responder for TaggedScript {
             )))
     }
 }
-
-// A struct to implement Responder on when returning an array of TaggedScripts
-#[derive(Debug, Deserialize, Serialize)]
-pub struct TaggedScriptList(pub Vec<TaggedScript>);
 
 impl Responder for TaggedScriptList {
     type Error = ServerError<'static>;

@@ -44,6 +44,8 @@ CREATE TABLE script_tag (
   FOREIGN KEY (tag_id) REFERENCES tag (id)
 );
 
+-- May need another script-tag association table for output_tags 
+
 -- "Tag subscriptions", may be owned by others but made "public"
 CREATE TABLE owner_tag (
   owner_id INTEGER NOT NULL,

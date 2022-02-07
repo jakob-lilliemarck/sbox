@@ -1,4 +1,5 @@
 use crate::errors::ServerError;
+use crate::models::common::IdList;
 use crate::models::script::Script;
 use crate::models::tag::Tag;
 use crate::schema::script_tag;
@@ -15,6 +16,12 @@ use serde::{Deserialize, Serialize};
 pub struct ScriptTag {
     pub script_id: i32,
     pub tag_id: i32,
+}
+
+impl ScriptTag {
+    pub fn to_tuple_id(&self) -> (&i32, &i32) {
+        (&self.script_id, &self.tag_id)
+    }
 }
 
 // TODO - make generic!

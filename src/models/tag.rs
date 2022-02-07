@@ -14,7 +14,7 @@ pub struct Tag {
     pub owner_id: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Insertable)]
+#[derive(Debug, Deserialize, Insertable)]
 #[table_name = "tag"]
 pub struct NewTag {
     pub value: String,
