@@ -19,28 +19,22 @@ pub async fn tags_get_by_owner<'a>(
     - if requested as owner, should return all followed tags
     - if requested as non-owner, should return all public followed tags
     */
-    let user = Owner {
+    let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),
     };
     let conn = get_conn(pool);
 
-    match owner::read(&conn, &owner_id) {
-        Ok(owner) => {
-            if user.id == *owner_id {
-                // requesting own tags
-                match owner_tag::read_tag_by_owner(&conn, &owner) {
-                    Ok(tags) => Ok(TagList(tags)),
-                    Err(err) => Err(err.into()),
-                }
-            } else {
-                match owner_tag::read_public_tag_by_owner(&conn, &owner) {
-                    Ok(tags) => Ok(TagList(tags)),
-                    Err(err) => Err(err.into()),
-                }
-            }
+    if this_owner.id != *owner_id {
+        match owner_tag::read_public_tag_by_owner(&conn, &this_owner) {
+            Ok(tags) => Ok(TagList(tags)),
+            Err(err) => Err(err.into()),
         }
-        Err(err) => Err(err.into()),
+    } else {
+        match owner_tag::read_tag_by_owner(&conn, &this_owner) {
+            Ok(tags) => Ok(TagList(tags)),
+            Err(err) => Err(err.into()),
+        }
     }
 }
 
@@ -145,14 +139,16 @@ pub async fn tags_delete<'a>(
     }
 }
 
-#[post("/tags/{id}/follow")]
-pub async fn tags_follow<'a>(
+#[post("/owners/{owner_id}/tags/{tag_id}")]
+pub async fn create_owner_tag<'a>(
     pool: web::Data<DbPool>,
+    owner_id: web::Path<i32>,
     tag_id: web::Path<i32>,
 ) -> Result<Follower, ServerError<'a>> {
     /*
     TODO
     - requires owner-id to be derived from auth
+    - not using owner_id from path yet
     */
     let conn = get_conn(pool);
     let owner = Owner {
@@ -186,14 +182,16 @@ pub async fn tags_follow<'a>(
     }
 }
 
-#[delete("/tags/{id}/follow")]
-pub async fn tags_delete_follow<'a>(
+#[delete("/owners/{owner_id}/tags/{tag_id}")]
+pub async fn delete_owner_tag<'a>(
     pool: web::Data<DbPool>,
+    owner_id: web::Path<i32>,
     tag_id: web::Path<i32>,
 ) -> Result<HttpResponse, ServerError<'a>> {
     /*
     TODO
     - requires owner-id to be derived from auth
+    - not using owner_id from path yet
     */
     let conn = get_conn(pool);
     let owner = Owner {

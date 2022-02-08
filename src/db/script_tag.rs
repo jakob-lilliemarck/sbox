@@ -1,6 +1,7 @@
+use crate::db::script;
 use crate::models::common::IdList;
-use crate::models::script::Script;
-use crate::models::script_tag::ScriptTag;
+use crate::models::script::{Script, TaggedScript};
+use crate::models::script_tag::{ScriptTag, UpdateScriptTag};
 use crate::models::tag::Tag;
 use crate::schema;
 
@@ -68,9 +69,34 @@ pub fn script_tag_exist(
     .get_result(conn)
 }
 
-pub fn create(conn: &diesel::PgConnection, new_script_tag: &ScriptTag) -> Result<ScriptTag, Error> {
-    diesel::insert_into(schema::script_tag::table)
-        .values(new_script_tag)
+pub fn create(conn: &diesel::PgConnection, tag_script: &ScriptTag) -> Result<TaggedScript, Error> {
+    conn.transaction(|| {
+        // if the relation already exist, update it else create a new relation
+        let exists = script_tag_exist(&conn, &tag_script)?;
+        if exists {
+            update(
+                &conn,
+                &tag_script.to_update_script_tag(),
+                tag_script.to_tuple_id(),
+            )?;
+        } else {
+            diesel::insert_into(schema::script_tag::table)
+                .values(tag_script)
+                .get_result::<ScriptTag>(conn)?;
+        };
+        let tagged = script::read_tagged(&conn, &tag_script.script_id)?;
+        Ok(tagged)
+    })
+}
+
+pub fn update(
+    conn: &diesel::PgConnection,
+    update_script_tag: &UpdateScriptTag,
+    script_tag_id: (&i32, &i32),
+) -> Result<ScriptTag, Error> {
+    use crate::schema::script_tag::dsl::*;
+    diesel::update(script_tag.find(script_tag_id))
+        .set(update_script_tag)
         .get_result::<ScriptTag>(conn)
 }
 

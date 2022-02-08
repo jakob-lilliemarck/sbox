@@ -24,18 +24,27 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
+            // owners
             .service(owners::owner_create)
+            // tags
             .service(tags::tags_get_by_owner)
             .service(tags::tags_create)
             .service(tags::tags_update)
-            .service(tags::tags_follow)
             .service(tags::tags_delete)
-            //.service(scripts::scripts_create)
-            .service(scripts::scripts_get_own)
-            .service(scripts::scripts_get_id)
-            .service(scripts::scripts_delete)
+            .service(tags::create_owner_tag)
+            .service(tags::delete_owner_tag)
+            // scripts
+            .service(scripts::create)
+            .service(scripts::get_by_id)
+            .service(scripts::get_by_owner_id)
+            .service(scripts::update)
+            .service(scripts::delete)
+            .service(scripts::create_script_tag)
+        //.service(scripts::scripts_get_own)
+        //.service(scripts::scripts_get_id)
+        //.service(scripts::scripts_delete)
     })
-    .bind("localhost:8000")?
+    .bind("localhost:8001")?
     .run()
     .await
 }

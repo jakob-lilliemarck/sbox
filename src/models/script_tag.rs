@@ -18,9 +18,20 @@ pub struct ScriptTag {
     pub is_output: bool,
 }
 
+#[derive(Debug, Serialize, Insertable, Deserialize, AsChangeset)]
+#[table_name = "script_tag"]
+pub struct UpdateScriptTag {
+    pub is_output: bool,
+}
+
 impl ScriptTag {
     pub fn to_tuple_id(&self) -> (&i32, &i32) {
         (&self.script_id, &self.tag_id)
+    }
+    pub fn to_update_script_tag(&self) -> UpdateScriptTag {
+        UpdateScriptTag {
+            is_output: self.is_output.clone(),
+        }
     }
 }
 

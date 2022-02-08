@@ -27,7 +27,7 @@ pub struct UpdateScript {
     pub source: String,
 }
 
-// Tagged script
+// Tagged script - the one represented to the user
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TaggedScript {
     pub id: i32,

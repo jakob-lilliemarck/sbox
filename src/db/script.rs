@@ -24,11 +24,14 @@ pub fn update(
     conn: &diesel::PgConnection,
     update_script: &UpdateScript,
     script_id: &i32,
-) -> Result<Script, Error> {
+) -> Result<TaggedScript, Error> {
     use crate::schema::script::dsl::*;
-    diesel::update(script.find(script_id))
-        .set(update_script)
-        .get_result::<Script>(conn)
+    conn.transaction(|| {
+        diesel::update(script.find(script_id))
+            .set(update_script)
+            .get_result::<Script>(conn)?;
+        read_tagged(&conn, &script_id)
+    })
 }
 
 pub fn delete(conn: &diesel::PgConnection, script_id: &i32) -> Result<(), Error> {
@@ -72,7 +75,7 @@ pub fn create_tagged(
             .map(|tag_id| ScriptTag {
                 tag_id: tag_id.clone(),
                 script_id: script.id.clone(),
-                is_output: false,
+                is_output: true,
             })
             .collect();
         // Concatenate vectors
