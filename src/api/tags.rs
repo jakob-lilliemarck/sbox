@@ -1,30 +1,36 @@
 use actix_web::{delete, dev::Body, get, post, put, web, HttpResponse};
 use sbox::db::owner;
 use sbox::db::owner_tag;
+use sbox::db::script_tag;
 use sbox::db::tag;
 use sbox::errors::ServerError;
 use sbox::models::owner::Owner;
 use sbox::models::owner_tag::Follower;
 use sbox::models::tag::{NewTag, Tag, TagList, UpdateTag};
 use sbox::utils::{get_conn, DbPool};
+/*
+On tag ownership & public tags:
+ - On tag deletion (orphaning), associated scripts that use the tag for tagging outputs should also be orphaned
+ OR orphaned and copied to a new script for the user.
+
+If a public tag has followers other than the owner:
+ - DONE - disallow changes to is_public.
+ - DONE - on delete (owner disassociation), also remove ownersip of any scripts where the tag is
+ used for output, and remove the current user as the owner of the tag.
+ - disallow changes or deletion of any scripts using the tag as output_tag_id.
+*/
 
 #[get("/owners/{id}/tags")]
 pub async fn tags_get_by_owner<'a>(
     pool: web::Data<DbPool>,
     owner_id: web::Path<i32>,
 ) -> Result<TagList, ServerError<'a>> {
-    /*
-    TODO
-    - requires owner-id to be derived from auth
-    - if requested as owner, should return all followed tags
-    - if requested as non-owner, should return all public followed tags
-    */
+    /* TODO - auth*/
     let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),
     };
     let conn = get_conn(pool);
-
     if this_owner.id != *owner_id {
         match owner_tag::read_public_tag_by_owner(&conn, &this_owner) {
             Ok(tags) => Ok(TagList(tags)),
@@ -43,10 +49,7 @@ pub async fn tags_create<'a>(
     pool: web::Data<DbPool>,
     new_tag: web::Json<NewTag>,
 ) -> Result<Tag, ServerError<'a>> {
-    /*
-    TODO
-    - requires owner-id to be derived from auth
-    */
+    /* TODO - auth*/
     let owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -73,33 +76,38 @@ pub async fn tags_update<'a>(
     update_tag: web::Json<UpdateTag>,
     tag_id: web::Path<i32>,
 ) -> Result<Tag, ServerError<'a>> {
-    /*
-    TODO
-    - requires owner-id to be derived from auth
-    */
-    let owner = Owner {
+    /* TODO - auth*/
+    let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),
     };
     let conn = get_conn(pool);
-    match tag::read(&conn, &tag_id) {
-        Ok(tag) => match tag.owner_id {
-            Some(owner_id) => {
-                if owner.id == owner_id {
-                    // Update the tag
-                    match tag::update(&conn, &update_tag, &tag_id) {
-                        Ok(tag) => Ok(tag),
-                        Err(err) => Err(err.into()),
-                    }
-                } else {
-                    // Disallow updates on others' tags
-                    Err(ServerError::Forbidden(None))
+    let t = tag::read(&conn, &tag_id)?;
+
+    let owner_list = {
+        let tag = tag::read(&conn, &tag_id)?;
+        let owner_list = owner_tag::read_owner_by_tag(&conn, &tag)?;
+        Ok(owner_list)
+    };
+
+    match owner_list {
+        Ok::<Vec<Owner>, diesel::result::Error>(owner_list) => {
+            if owner_list.len() == 1
+                && owner_list
+                    .into_iter()
+                    .all(|owner| owner.id == this_owner.id)
+            {
+                // If there is only one follower, and that follower is the owner of the tag, allow to make it private
+                match tag::update(&conn, &update_tag, &tag_id) {
+                    Ok(tag) => Ok(tag),
+                    Err(err) => Err(err.into()),
                 }
+            } else {
+                // Disallow to make orphaned tags private.
+                // Disallow to make public tags private if anyone else than the owner follows them
+                Err(ServerError::Forbidden(None))
             }
-            // Disallow update to orphaned tags
-            None => Err(ServerError::Forbidden(None)),
-        },
-        // Error reading the tag
+        }
         Err(err) => Err(err.into()),
     }
 }
@@ -111,7 +119,7 @@ pub async fn tags_delete<'a>(
 ) -> Result<HttpResponse, ServerError<'a>> {
     /*
     TODO
-    - requires owner-id to be derived from auth
+        - auth
     */
     let conn = get_conn(pool);
     let owner = Owner {
@@ -122,19 +130,29 @@ pub async fn tags_delete<'a>(
         Ok(tag) => match tag.owner_id {
             Some(owner_id) => {
                 if owner.id == owner_id {
-                    // if the tag exist, and this user owns the tag, disassociate the user from the tag.
-                    match tag::update_owner(&conn, &tag_id, &None) {
-                        Ok(_) => Ok(HttpResponse::Ok().body(Body::Empty)),
+                    // if the tag exist, this user owns the tag:
+                    // 1. remove any script_tag associations where the tag is used for output
+                    // 2. remove the this user as the owner of the tag
+                    match {
+                        script_tag::orphan_script_where_tag_is_ouput(&conn, &tag)?;
+                        tag::update_owner(&conn, &tag_id, &None)?;
+                        Ok(())
+                    } {
+                        Ok::<(), diesel::result::Error>(_) => {
+                            Ok(HttpResponse::Ok().body(Body::Empty))
+                        }
+                        // DB update errors
                         Err(err) => Err(err.into()),
                     }
                 } else {
+                    // Disallow updates of non-owned tags.
                     Err(ServerError::Forbidden(None))
                 }
             }
-            // Forbid updates on orphaned tags
+            // Disallow updates on orphaned tags
             None => Err(ServerError::Forbidden(None)),
         },
-        // Error reading the tag
+        // Read tag errors
         Err(err) => Err(err.into()),
     }
 }
@@ -142,17 +160,16 @@ pub async fn tags_delete<'a>(
 #[post("/owners/{owner_id}/tags/{tag_id}")]
 pub async fn create_owner_tag<'a>(
     pool: web::Data<DbPool>,
-    owner_id: web::Path<i32>,
-    tag_id: web::Path<i32>,
+    web::Path((owner_id, tag_id)): web::Path<(i32, i32)>,
 ) -> Result<Follower, ServerError<'a>> {
     /*
     TODO
-    - requires owner-id to be derived from auth
-    - not using owner_id from path yet
+        - auth
+        - use owner_id from path params
     */
     let conn = get_conn(pool);
     let owner = Owner {
-        id: 1,
+        id: 2,
         name: "dummy".to_string(),
     };
     let follower = Follower {
@@ -185,13 +202,12 @@ pub async fn create_owner_tag<'a>(
 #[delete("/owners/{owner_id}/tags/{tag_id}")]
 pub async fn delete_owner_tag<'a>(
     pool: web::Data<DbPool>,
-    owner_id: web::Path<i32>,
-    tag_id: web::Path<i32>,
+    web::Path((owner_id, tag_id)): web::Path<(i32, i32)>,
 ) -> Result<HttpResponse, ServerError<'a>> {
     /*
     TODO
-    - requires owner-id to be derived from auth
-    - not using owner_id from path yet
+        - auth
+        - use owner_id from path params
     */
     let conn = get_conn(pool);
     let owner = Owner {

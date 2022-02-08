@@ -7,7 +7,7 @@ struct ErrorResponse<'a> {
     error: Option<&'a str>,
 }
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, Clone)]
 pub enum ServerError<'a> {
     #[display(fmt = "Not found")]
     NotFound,

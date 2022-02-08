@@ -7,14 +7,14 @@ CREATE TABLE tag (
   id SERIAL PRIMARY KEY,
   value VARCHAR(32) NOT NULL,
   is_public BOOLEAN NOT NULL DEFAULT false,
-  owner_id INTEGER, -- should be nullable so tags may be "orphaned" upon delete
+  owner_id INTEGER, -- should be nullable to allowe orphan tags
   FOREIGN KEY (owner_id) REFERENCES owner (id)
 );
 
 CREATE TABLE script (
   id SERIAL PRIMARY KEY,
   source VARCHAR NOT NULL,
-  owner_id INTEGER NOT NULL,
+  owner_id INTEGER, -- should be nullable to allow orphan scripts
   FOREIGN KEY (owner_id) REFERENCES owner (id)
 );
 

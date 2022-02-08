@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct Script {
     pub id: i32,
     pub source: String,
-    pub owner_id: i32,
+    pub owner_id: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Insertable)]
@@ -27,12 +27,19 @@ pub struct UpdateScript {
     pub source: String,
 }
 
+#[derive(Debug, Deserialize, AsChangeset, Insertable)]
+#[table_name = "script"]
+#[changeset_options(treat_none_as_null = "true")]
+pub struct UpdateScriptOwner {
+    pub owner_id: Option<i32>,
+}
+
 // Tagged script - the one represented to the user
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TaggedScript {
     pub id: i32,
     pub source: String,
-    pub owner_id: i32,
+    pub owner_id: Option<i32>,
     pub tag_ids: IdList,
     pub output_tag_ids: IdList,
 }

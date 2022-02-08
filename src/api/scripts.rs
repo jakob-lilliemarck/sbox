@@ -55,7 +55,7 @@ pub async fn get_by_id<'a>(
     let conn = get_conn(pool);
     match script::read_tagged(&conn, &script_id) {
         Ok(tagged_script) => {
-            if tagged_script.owner_id == owner.id {
+            if tagged_script.owner_id.unwrap() == owner.id {
                 Ok(tagged_script)
             } else {
                 Err(ServerError::Forbidden(None))
@@ -102,7 +102,7 @@ pub async fn update<'a>(
     let conn = get_conn(pool);
     match script::read_tagged(&conn, &script_id) {
         Ok(s) => {
-            if s.owner_id == owner.id {
+            if s.owner_id.unwrap() == owner.id {
                 match script::update(&conn, &update_script, &script_id) {
                     Ok(tagged_script) => Ok(tagged_script),
                     Err(err) => Err(err.into()),
@@ -128,7 +128,7 @@ pub async fn delete<'a>(
     let conn = get_conn(pool);
     match script::read(&conn, &script_id) {
         Ok(s) => {
-            if s.owner_id == owner.id {
+            if s.owner_id.unwrap() == owner.id {
                 match script::delete(&conn, &script_id) {
                     Ok(_) => Ok(HttpResponse::Ok().body(Body::Empty)),
                     Err(err) => Err(err.into()),
@@ -170,7 +170,7 @@ pub async fn create_script_tag<'a>(
         Ok((script, tag))
     } {
         Ok::<(Script, Tag), diesel::result::Error>((script, tag)) => {
-            if script.owner_id == this_owner.id
+            if script.owner_id.unwrap() == this_owner.id
                 && (tag.is_public || tag.owner_id.unwrap() == this_owner.id)
             {
                 let script_tag = ScriptTag {
@@ -190,12 +190,30 @@ pub async fn create_script_tag<'a>(
         Err(err) => Err(err.into()),
     }
 }
-/*
+
 #[delete("/scripts/{script_id}/tags/{tag_id}")]
 pub async fn delete_script_tag<'a>(
     pool: web::Data<DbPool>,
-    script_id: web::Path<i32>,
-    tag_id: web::Path<i32>,
+    web::Path((script_id, tag_id)): web::Path<(i32, i32)>,
 ) -> Result<HttpResponse, ServerError<'a>> {
+    let this_owner = Owner {
+        id: 1,
+        name: "dummy".to_string(),
+    };
+    let conn = get_conn(pool);
+    match { script::read(&conn, &script_id) } {
+        Ok(script) => {
+            if script.owner_id.unwrap() == this_owner.id {
+                match script_tag::delete(&conn, (&script_id, &tag_id)) {
+                    Ok(_) => Ok(HttpResponse::Ok().body(Body::Empty)),
+                    Err(err) => Err(err.into()),
+                }
+            } else {
+                // Disallow deletes if this owner does not own the script.
+                // Not owning the tag must be allowed so public tags may be unfollowed.
+                Err(ServerError::Forbidden(None))
+            }
+        }
+        Err(err) => Err(err.into()),
+    }
 }
-*/

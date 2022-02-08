@@ -32,7 +32,7 @@ table! {
     script (id) {
         id -> Int4,
         source -> Varchar,
-        owner_id -> Int4,
+        owner_id -> Nullable<Int4>,
     }
 }
 

@@ -5,7 +5,7 @@ use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Identifiable, AsChangeset)]
+#[derive(Debug, Clone, Deserialize, Serialize, Queryable, Identifiable, AsChangeset)]
 #[table_name = "tag"]
 pub struct Tag {
     pub id: i32,

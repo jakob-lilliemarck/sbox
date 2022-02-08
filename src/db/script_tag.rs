@@ -1,6 +1,6 @@
 use crate::db::script;
 use crate::models::common::IdList;
-use crate::models::script::{Script, TaggedScript};
+use crate::models::script::{Script, TaggedScript, UpdateScriptOwner};
 use crate::models::script_tag::{ScriptTag, UpdateScriptTag};
 use crate::models::tag::Tag;
 use crate::schema;
@@ -14,6 +14,17 @@ pub fn read_tag_by_script(conn: &diesel::PgConnection, script: &Script) -> Resul
         .inner_join(schema::tag::table)
         .select(schema::tag::all_columns)
         .load::<Tag>(conn)
+}
+
+pub fn read_script_by_tag_is_output(
+    conn: &diesel::PgConnection,
+    tag: &Tag,
+) -> Result<Vec<Script>, Error> {
+    ScriptTag::belonging_to(tag)
+        .filter(schema::script_tag::is_output)
+        .inner_join(schema::script::table)
+        .select(schema::script::all_columns)
+        .load::<Script>(conn)
 }
 
 pub fn read_script_by_tag(conn: &diesel::PgConnection, tag: &Tag) -> Result<Vec<Script>, Error> {
@@ -110,12 +121,30 @@ pub fn create_many(
     Ok(())
 }
 
-pub fn delete(conn: &diesel::PgConnection, tag_script: &ScriptTag) -> Result<(), Error> {
+pub fn delete(conn: &diesel::PgConnection, tag_script_id: (&i32, &i32)) -> Result<(), Error> {
     use crate::schema::script_tag::dsl::*;
-    match diesel::delete(script_tag.find((tag_script.script_id, tag_script.tag_id))).execute(conn) {
-        Ok(_) => Ok(()),
-        Err(err) => Err(err),
-    }
+    diesel::delete(script_tag.find(tag_script_id)).execute(conn)?;
+    Ok(())
+}
+
+pub fn orphan_script_where_tag_is_ouput(
+    conn: &diesel::PgConnection,
+    tag: &Tag,
+) -> Result<(), Error> {
+    // Delete all script_tag associations that are used as output by the associated script, for a given tag.
+    use crate::schema::script::dsl::*;
+    let orphan = UpdateScriptOwner { owner_id: None };
+    // Find ids of scripts to orphan
+    let script_ids = ScriptTag::belonging_to(tag)
+        .filter(schema::script_tag::is_output)
+        .inner_join(schema::script::table)
+        .select(schema::script::id)
+        .load::<i32>(conn)?;
+    // Orphan the scripts
+    diesel::update(script.filter(id.eq_any(script_ids)))
+        .set(&orphan)
+        .get_result::<Script>(conn)?;
+    Ok(())
 }
 
 pub fn delete_all_by_script_id(conn: &diesel::PgConnection, id_script: &i32) -> Result<(), Error> {
