@@ -25,12 +25,22 @@ pub fn read_script_by_tag(conn: &diesel::PgConnection, tag: &Tag) -> Result<Vec<
 pub fn read_tag_ids_by_script(
     conn: &diesel::PgConnection,
     script: &Script,
-) -> Result<IdList, Error> {
+) -> Result<(Vec<i32>, Vec<i32>), Error> {
     match ScriptTag::belonging_to(script)
-        .select(schema::script_tag::script_id)
-        .load::<i32>(conn)
+        .select(schema::script_tag::all_columns)
+        .load::<ScriptTag>(conn)
     {
-        Ok(ids) => Ok(IdList(ids)),
+        Ok(ids) => Ok(ids
+            .into_iter()
+            .fold((vec![], vec![]), |mut accumulator, script_tag| {
+                if script_tag.is_output {
+                    accumulator.1.push(script_tag.tag_id);
+                    accumulator
+                } else {
+                    accumulator.0.push(script_tag.tag_id);
+                    accumulator
+                }
+            })),
         Err(err) => Err(err),
     }
 }
@@ -58,9 +68,9 @@ pub fn script_tag_exist(
     .get_result(conn)
 }
 
-pub fn create(conn: &diesel::PgConnection, script_tag: &ScriptTag) -> Result<ScriptTag, Error> {
+pub fn create(conn: &diesel::PgConnection, new_script_tag: &ScriptTag) -> Result<ScriptTag, Error> {
     diesel::insert_into(schema::script_tag::table)
-        .values(script_tag)
+        .values(new_script_tag)
         .get_result::<ScriptTag>(conn)
 }
 

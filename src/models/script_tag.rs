@@ -1,5 +1,4 @@
 use crate::errors::ServerError;
-use crate::models::common::IdList;
 use crate::models::script::Script;
 use crate::models::tag::Tag;
 use crate::schema::script_tag;
@@ -8,7 +7,7 @@ use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Insertable, Identifiable, Associations, Queryable)]
+#[derive(Debug, Serialize, Insertable, Deserialize, Identifiable, Associations, Queryable)]
 #[belongs_to(Script)]
 #[belongs_to(Tag)]
 #[primary_key(script_id, tag_id)]
@@ -16,6 +15,7 @@ use serde::{Deserialize, Serialize};
 pub struct ScriptTag {
     pub script_id: i32,
     pub tag_id: i32,
+    pub is_output: bool,
 }
 
 impl ScriptTag {

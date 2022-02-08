@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct Tag {
     pub id: i32,
     pub value: String,
-    pub public: bool,
+    pub is_public: bool,
     pub owner_id: Option<i32>,
 }
 
@@ -18,13 +18,13 @@ pub struct Tag {
 #[table_name = "tag"]
 pub struct NewTag {
     pub value: String,
-    pub public: Option<bool>,
+    pub is_public: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, AsChangeset, Insertable)]
 #[table_name = "tag"]
 pub struct UpdateTag {
-    pub public: Option<bool>,
+    pub is_public: Option<bool>,
 }
 
 #[derive(Debug, Insertable, AsChangeset)]

@@ -40,6 +40,7 @@ table! {
     script_tag (script_id, tag_id) {
         script_id -> Int4,
         tag_id -> Int4,
+        is_output -> Bool,
     }
 }
 
@@ -47,7 +48,7 @@ table! {
     tag (id) {
         id -> Int4,
         value -> Varchar,
-        public -> Bool,
+        is_public -> Bool,
         owner_id -> Nullable<Int4>,
     }
 }

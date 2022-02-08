@@ -1,6 +1,5 @@
 use crate::errors::ServerError;
 use crate::models::common::IdList;
-use crate::models::tag::Tag;
 use crate::schema::*;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
@@ -35,11 +34,12 @@ pub struct TaggedScript {
     pub source: String,
     pub owner_id: i32,
     pub tag_ids: IdList,
+    pub output_tag_ids: IdList,
 }
 
-impl From<(Script, IdList)> for TaggedScript {
-    fn from(script_tag_ids_tuple: (Script, IdList)) -> TaggedScript {
-        let (s, tag_ids) = script_tag_ids_tuple;
+impl From<(Script, IdList, IdList)> for TaggedScript {
+    fn from(script_tag_ids_tuple: (Script, IdList, IdList)) -> TaggedScript {
+        let (s, tag_ids, output_tag_ids) = script_tag_ids_tuple;
         let Script {
             id,
             source,
@@ -47,6 +47,7 @@ impl From<(Script, IdList)> for TaggedScript {
         } = s;
         TaggedScript {
             tag_ids,
+            output_tag_ids,
             id,
             source,
             owner_id,
@@ -58,6 +59,7 @@ impl From<(Script, IdList)> for TaggedScript {
 pub struct NewTaggedScript {
     pub source: String,
     pub tag_ids: Vec<i32>,
+    pub output_tag_ids: Vec<i32>,
 }
 
 #[derive(Debug, Deserialize)]

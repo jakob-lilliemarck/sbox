@@ -32,13 +32,12 @@ pub fn update(
 }
 
 pub fn delete(conn: &diesel::PgConnection, script_id: &i32) -> Result<(), Error> {
-    // TODO!
-    // Make sure all script_tag relations are deleted!!!
     use crate::schema::script::dsl::*;
-    match diesel::delete(script.find(script_id)).execute(conn) {
-        Ok(_) => Ok(()),
-        Err(err) => Err(err),
-    }
+    conn.transaction(|| {
+        db::script_tag::delete_all_by_script_id(conn, script_id)?;
+        diesel::delete(script.find(script_id)).execute(conn)?;
+        Ok(())
+    })
 }
 
 pub fn create_tagged(
@@ -46,30 +45,53 @@ pub fn create_tagged(
     new_tagged_script: &NewTaggedScript,
     owner_id: &i32,
 ) -> Result<TaggedScript, Error> {
-    let NewTaggedScript { source, tag_ids } = new_tagged_script;
+    let NewTaggedScript {
+        source,
+        tag_ids,
+        output_tag_ids,
+    } = new_tagged_script;
     let new_script = NewScript {
         owner_id: owner_id.clone(),
         source: source.clone(),
     };
+
     conn.transaction(|| {
         let script = create(&conn, &new_script)?;
-        let script_tag_list = tag_ids
+        // ScriptTag from tag_ids
+        let mut tag_list: Vec<ScriptTag> = tag_ids
             .into_iter()
             .map(|tag_id| ScriptTag {
                 tag_id: tag_id.clone(),
                 script_id: script.id.clone(),
+                is_output: false,
             })
             .collect();
-        db::script_tag::create_many(&conn, &script_tag_list)?;
-        Ok((script, IdList(tag_ids.clone())).into())
+        // ScriptTag from output_tag_ids
+        let mut output_tag_list: Vec<ScriptTag> = output_tag_ids
+            .into_iter()
+            .map(|tag_id| ScriptTag {
+                tag_id: tag_id.clone(),
+                script_id: script.id.clone(),
+                is_output: false,
+            })
+            .collect();
+        // Concatenate vectors
+        tag_list.append(&mut output_tag_list);
+        db::script_tag::create_many(&conn, &tag_list)?;
+        Ok((
+            script,
+            IdList(tag_ids.clone()),
+            IdList(output_tag_ids.clone()),
+        )
+            .into())
     })
 }
 
 pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<TaggedScript, Error> {
     conn.transaction(|| {
         let script = read(&conn, script_id)?;
-        let tag_ids = db::script_tag::read_tag_ids_by_script(&conn, &script)?;
-        Ok((script, tag_ids).into())
+        let (tag_ids, output_tag_ids) = db::script_tag::read_tag_ids_by_script(&conn, &script)?;
+        Ok((script, IdList(tag_ids), IdList(output_tag_ids)).into())
     })
 }
 

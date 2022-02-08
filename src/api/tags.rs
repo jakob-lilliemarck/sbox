@@ -166,7 +166,7 @@ pub async fn tags_follow<'a>(
     match tag::read(&conn, &tag_id) {
         Ok(tag) => match tag.owner_id {
             Some(owner_id) => {
-                if tag.public || owner_id == follower.owner_id {
+                if tag.is_public || owner_id == follower.owner_id {
                     // Attempt to create a follower!
                     match owner_tag::create_owner_tag(&conn, &follower) {
                         Ok(follower) => Ok(follower),

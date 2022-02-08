@@ -22,7 +22,7 @@ pub fn read_public_tag_by_owner(
     Follower::belonging_to(owner)
         .inner_join(schema::tag::table)
         .select(schema::tag::all_columns)
-        .filter(schema::tag::public.eq(true))
+        .filter(schema::tag::is_public.eq(true))
         .load::<Tag>(conn)
 }
 
