@@ -7,7 +7,7 @@ CREATE TABLE tag (
   id SERIAL PRIMARY KEY,
   value VARCHAR(32) NOT NULL,
   is_public BOOLEAN NOT NULL DEFAULT false,
-  owner_id INTEGER, -- should be nullable to allowe orphan tags
+  owner_id INTEGER, -- should be nullable to allow orphan tags
   FOREIGN KEY (owner_id) REFERENCES owner (id)
 );
 

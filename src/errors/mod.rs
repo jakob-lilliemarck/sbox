@@ -1,4 +1,5 @@
 use actix_web::{http::StatusCode, HttpResponse};
+use actix_web_httpauth::extractors::AuthenticationError;
 use derive_more::Display;
 use serde::Serialize;
 
@@ -15,6 +16,10 @@ pub enum ServerError<'a> {
     BadRequest(Option<&'a str>),
     #[display(fmt = "Forbidden")]
     Forbidden(Option<&'a str>),
+    #[display(fmt = "JWKSFetchError")]
+    JWKSFetchError,
+    #[display(fmt = "Unauthorized")]
+    Unauthorized,
     #[display(fmt = "Unknown error")]
     Unknown,
 }
@@ -32,6 +37,8 @@ impl<'a> ServerError<'a> {
                 None => Some("Forbidden"),
             },
             Self::Unknown => Some("Unknown error"),
+            Self::JWKSFetchError => Some("JWKS error"),
+            Self::Unauthorized => Some("Unauthorized"),
         }
     }
 }
@@ -45,6 +52,14 @@ impl<'a> From<diesel::result::Error> for ServerError<'a> {
     }
 }
 
+impl<'a> From<Box<dyn std::error::Error>> for ServerError<'a> {
+    fn from(err: Box<dyn std::error::Error>) -> ServerError<'a> {
+        match err {
+            _ => ServerError::Unknown,
+        }
+    }
+}
+
 impl<'a> actix_web::error::ResponseError for ServerError<'a> {
     fn status_code(&self) -> StatusCode {
         match self {
@@ -52,6 +67,8 @@ impl<'a> actix_web::error::ResponseError for ServerError<'a> {
             Self::BadRequest(_cause) => StatusCode::BAD_REQUEST,
             Self::Forbidden(_cause) => StatusCode::FORBIDDEN,
             Self::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::JWKSFetchError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Unauthorized => StatusCode::UNAUTHORIZED,
         }
     }
 

@@ -1,7 +1,8 @@
 use crate::db;
 use crate::models::common::IdList;
 use crate::models::script::{
-    NewScript, NewTaggedScript, Script, TaggedScript, TaggedScriptList, UpdateScript,
+    NewScript, NewTaggedScript, Script, StrippedTaggedScript, TaggedScript, TaggedScriptList,
+    UpdateScript,
 };
 use crate::models::script_tag::ScriptTag;
 use crate::schema::script;
@@ -47,7 +48,7 @@ pub fn create_tagged(
     conn: &diesel::PgConnection,
     new_tagged_script: &NewTaggedScript,
     owner_id: &i32,
-) -> Result<TaggedScript, Error> {
+) -> Result<StrippedTaggedScript, Error> {
     let NewTaggedScript {
         source,
         tag_ids,
@@ -93,8 +94,8 @@ pub fn create_tagged(
 pub fn read_tagged(conn: &diesel::PgConnection, script_id: &i32) -> Result<TaggedScript, Error> {
     conn.transaction(|| {
         let script = read(&conn, script_id)?;
-        let (tag_ids, output_tag_ids) = db::script_tag::read_tag_ids_by_script(&conn, &script)?;
-        Ok((script, IdList(tag_ids), IdList(output_tag_ids)).into())
+        let flagged_tags = db::script_tag::read_tag_by_script2(&conn, &script)?;
+        Ok((script, flagged_tags).into())
     })
 }
 

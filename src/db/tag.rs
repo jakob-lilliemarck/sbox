@@ -28,6 +28,11 @@ pub fn read(conn: &diesel::PgConnection, tag_id: &i32) -> Result<Tag, Error> {
     tag.find(tag_id).first::<Tag>(conn)
 }
 
+pub fn read_many(conn: &diesel::PgConnection, tag_ids: Vec<i32>) -> Result<Vec<Tag>, Error> {
+    use crate::schema::tag::dsl::*;
+    tag.filter(id.eq_any(tag_ids)).load::<Tag>(conn)
+}
+
 pub fn read_by_value_and_owner<'a>(
     conn: &diesel::PgConnection,
     val: &'a str,

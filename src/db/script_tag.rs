@@ -2,7 +2,7 @@ use crate::db::script;
 use crate::models::common::IdList;
 use crate::models::script::{Script, TaggedScript, UpdateScriptOwner};
 use crate::models::script_tag::{ScriptTag, UpdateScriptTag};
-use crate::models::tag::Tag;
+use crate::models::tag::{JoinedTag, Tag};
 use crate::schema;
 
 use diesel::prelude::*;
@@ -16,6 +16,16 @@ pub fn read_tag_by_script(conn: &diesel::PgConnection, script: &Script) -> Resul
         .load::<Tag>(conn)
 }
 
+pub fn read_tag_by_script2(
+    conn: &diesel::PgConnection,
+    script: &Script,
+) -> Result<Vec<(Tag, bool)>, Error> {
+    ScriptTag::belonging_to(script)
+        .inner_join(schema::tag::table)
+        .select((schema::tag::all_columns, schema::script_tag::is_output))
+        .load::<(Tag, bool)>(conn)
+}
+//contacts::table.inner_join(emails::table).load::<(models::Contact, models::Email)>
 pub fn read_script_by_tag_is_output(
     conn: &diesel::PgConnection,
     tag: &Tag,
@@ -34,6 +44,7 @@ pub fn read_script_by_tag(conn: &diesel::PgConnection, tag: &Tag) -> Result<Vec<
         .load::<Script>(conn)
 }
 
+// Deprecate..?
 pub fn read_tag_ids_by_script(
     conn: &diesel::PgConnection,
     script: &Script,

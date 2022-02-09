@@ -1,4 +1,5 @@
 use crate::errors::ServerError;
+use crate::models::common::IdList;
 use crate::schema::tag;
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
@@ -12,6 +13,15 @@ pub struct Tag {
     pub value: String,
     pub is_public: bool,
     pub owner_id: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable)]
+pub struct JoinedTag {
+    pub id: i32,
+    pub value: String,
+    pub is_public: bool,
+    pub owner_id: i32,
+    pub is_output: bool,
 }
 
 #[derive(Debug, Deserialize, Insertable)]
@@ -36,6 +46,12 @@ pub struct UpdateTagOwner {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TagList(pub Vec<Tag>);
+
+impl From<Vec<Tag>> for IdList {
+    fn from(tag_list: Vec<Tag>) -> IdList {
+        IdList(tag_list.into_iter().map(|tag| tag.id).collect())
+    }
+}
 
 impl Responder for Tag {
     type Error = ServerError<'static>;

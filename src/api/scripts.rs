@@ -1,5 +1,5 @@
 use actix_web::{delete, dev::Body, get, post, put, web, HttpResponse};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use sbox::db::script;
 use sbox::db::script_tag;
@@ -7,7 +7,7 @@ use sbox::db::tag;
 use sbox::errors::ServerError;
 use sbox::models::owner::Owner;
 use sbox::models::script::{
-    NewTaggedScript, Script, TaggedScript, TaggedScriptList, UpdateScript, UpdateTaggedScript,
+    NewTaggedScript, Script, StrippedTaggedScript, TaggedScriptList, UpdateScript,
 };
 use sbox::models::script_tag::ScriptTag;
 use sbox::models::tag::Tag;
@@ -18,10 +18,7 @@ pub async fn get_by_owner_id<'a>(
     pool: web::Data<DbPool>,
     owner_id: web::Path<i32>,
 ) -> Result<TaggedScriptList, ServerError<'a>> {
-    /*
-    TODO
-        - Auth
-    */
+    /* TODO - auth */
     let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -43,11 +40,8 @@ pub async fn get_by_owner_id<'a>(
 pub async fn get_by_id<'a>(
     pool: web::Data<DbPool>,
     script_id: web::Path<i32>,
-) -> Result<TaggedScript, ServerError<'a>> {
-    /*
-    TODO:
-        - Auth
-    */
+) -> Result<StrippedTaggedScript, ServerError<'a>> {
+    /* TODO - auth */
     let owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -56,7 +50,7 @@ pub async fn get_by_id<'a>(
     match script::read_tagged(&conn, &script_id) {
         Ok(tagged_script) => {
             if tagged_script.owner_id.unwrap() == owner.id {
-                Ok(tagged_script)
+                Ok(tagged_script.into())
             } else {
                 Err(ServerError::Forbidden(None))
             }
@@ -69,11 +63,8 @@ pub async fn get_by_id<'a>(
 pub async fn create<'a>(
     pool: web::Data<DbPool>,
     new_tagged_script: web::Json<NewTaggedScript>,
-) -> Result<TaggedScript, ServerError<'a>> {
-    /*
-    TODO:
-        - Auth
-    */
+) -> Result<StrippedTaggedScript, ServerError<'a>> {
+    /* TODO - auth */
     let owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -90,10 +81,11 @@ pub async fn update<'a>(
     pool: web::Data<DbPool>,
     script_id: web::Path<i32>,
     update_script: web::Json<UpdateScript>,
-) -> Result<TaggedScript, ServerError<'a>> {
+) -> Result<StrippedTaggedScript, ServerError<'a>> {
     /*
-    TODO:
-        - Auth
+    TODO
+    - auth
+    - disallow script updates if any output tags has followers other than the owner of this script!
     */
     let owner = Owner {
         id: 1,
@@ -104,7 +96,7 @@ pub async fn update<'a>(
         Ok(s) => {
             if s.owner_id.unwrap() == owner.id {
                 match script::update(&conn, &update_script, &script_id) {
-                    Ok(tagged_script) => Ok(tagged_script),
+                    Ok(tagged_script) => Ok(tagged_script.into()),
                     Err(err) => Err(err.into()),
                 }
             } else {
@@ -121,6 +113,11 @@ pub async fn delete<'a>(
     pool: web::Data<DbPool>,
     script_id: web::Path<i32>,
 ) -> Result<HttpResponse, ServerError<'a>> {
+    /*
+    TODO
+    - auth
+    - disallow script delete if any output tags has followers other than the owner of this script - then orphan instead
+    */
     let owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -153,7 +150,8 @@ pub async fn create_script_tag<'a>(
     pool: web::Data<DbPool>,
     web::Path((script_id, tag_id)): web::Path<(i32, i32)>,
     tag_qs: web::Query<TagScriptQs>,
-) -> Result<TaggedScript, ServerError<'a>> {
+) -> Result<StrippedTaggedScript, ServerError<'a>> {
+    /* TODO - auth */
     let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),
@@ -179,7 +177,7 @@ pub async fn create_script_tag<'a>(
                     is_output,
                 };
                 match script_tag::create(&conn, &script_tag) {
-                    Ok(tagged_script) => Ok(tagged_script),
+                    Ok(tagged_script) => Ok(tagged_script.into()),
                     Err(err) => Err(err.into()),
                 }
             } else {
@@ -196,6 +194,7 @@ pub async fn delete_script_tag<'a>(
     pool: web::Data<DbPool>,
     web::Path((script_id, tag_id)): web::Path<(i32, i32)>,
 ) -> Result<HttpResponse, ServerError<'a>> {
+    /* TODO - auth */
     let this_owner = Owner {
         id: 1,
         name: "dummy".to_string(),

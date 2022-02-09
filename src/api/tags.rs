@@ -1,22 +1,19 @@
 use actix_web::{delete, dev::Body, get, post, put, web, HttpResponse};
-use sbox::db::owner;
 use sbox::db::owner_tag;
 use sbox::db::script_tag;
 use sbox::db::tag;
 use sbox::errors::ServerError;
 use sbox::models::owner::Owner;
-use sbox::models::owner_tag::Follower;
 use sbox::models::tag::{NewTag, Tag, TagList, UpdateTag};
 use sbox::utils::{get_conn, DbPool};
 /*
 On tag ownership & public tags:
  - On tag deletion (orphaning), associated scripts that use the tag for tagging outputs should also be orphaned
- OR orphaned and copied to a new script for the user.
+ OR orphaned and copied to a new script for the user. <= CONSIDER THIS!
 
 If a public tag has followers other than the owner:
  - DONE - disallow changes to is_public.
- - DONE - on delete (owner disassociation), also remove ownersip of any scripts where the tag is
- used for output, and remove the current user as the owner of the tag.
+ - DONE - disallow delete of any tags used for output.
  - disallow changes or deletion of any scripts using the tag as output_tag_id.
 */
 
@@ -82,7 +79,6 @@ pub async fn tags_update<'a>(
         name: "dummy".to_string(),
     };
     let conn = get_conn(pool);
-    let t = tag::read(&conn, &tag_id)?;
 
     let owner_list = {
         let tag = tag::read(&conn, &tag_id)?;
@@ -97,14 +93,13 @@ pub async fn tags_update<'a>(
                     .into_iter()
                     .all(|owner| owner.id == this_owner.id)
             {
-                // If there is only one follower, and that follower is the owner of the tag, allow to make it private
                 match tag::update(&conn, &update_tag, &tag_id) {
                     Ok(tag) => Ok(tag),
                     Err(err) => Err(err.into()),
                 }
             } else {
-                // Disallow to make orphaned tags private.
-                // Disallow to make public tags private if anyone else than the owner follows them
+                // Disallow updates to orphaned tags.
+                // Disallow updates to tag followed by others than the owner.
                 Err(ServerError::Forbidden(None))
             }
         }
@@ -117,10 +112,7 @@ pub async fn tags_delete<'a>(
     pool: web::Data<DbPool>,
     tag_id: web::Path<i32>,
 ) -> Result<HttpResponse, ServerError<'a>> {
-    /*
-    TODO
-        - auth
-    */
+    /* TODO - auth */
     let conn = get_conn(pool);
     let owner = Owner {
         id: 1,
@@ -130,18 +122,17 @@ pub async fn tags_delete<'a>(
         Ok(tag) => match tag.owner_id {
             Some(owner_id) => {
                 if owner.id == owner_id {
-                    // if the tag exist, this user owns the tag:
-                    // 1. remove any script_tag associations where the tag is used for output
-                    // 2. remove the this user as the owner of the tag
-                    match {
-                        script_tag::orphan_script_where_tag_is_ouput(&conn, &tag)?;
-                        tag::update_owner(&conn, &tag_id, &None)?;
-                        Ok(())
-                    } {
-                        Ok::<(), diesel::result::Error>(_) => {
-                            Ok(HttpResponse::Ok().body(Body::Empty))
+                    match script_tag::read_script_by_tag_is_output(&conn, &tag) {
+                        Ok(scripts) => {
+                            // TODO - allow if all scripts are orphaned
+                            if scripts.len() == 0 {
+                                tag::update_owner(&conn, &tag_id, &None)?;
+                                Ok(HttpResponse::Ok().body(Body::Empty))
+                            } else {
+                                // Disallow  updates of tags used for script output.
+                                Err(ServerError::Forbidden(Some("Tags used for script output may not be deleted, you need to unassign the tag or orphan the script first.")))
+                            }
                         }
-                        // DB update errors
                         Err(err) => Err(err.into()),
                     }
                 } else {
@@ -152,92 +143,6 @@ pub async fn tags_delete<'a>(
             // Disallow updates on orphaned tags
             None => Err(ServerError::Forbidden(None)),
         },
-        // Read tag errors
-        Err(err) => Err(err.into()),
-    }
-}
-
-#[post("/owners/{owner_id}/tags/{tag_id}")]
-pub async fn create_owner_tag<'a>(
-    pool: web::Data<DbPool>,
-    web::Path((owner_id, tag_id)): web::Path<(i32, i32)>,
-) -> Result<Follower, ServerError<'a>> {
-    /*
-    TODO
-        - auth
-        - use owner_id from path params
-    */
-    let conn = get_conn(pool);
-    let owner = Owner {
-        id: 2,
-        name: "dummy".to_string(),
-    };
-    let follower = Follower {
-        owner_id: owner.id.clone(),
-        tag_id: tag_id.clone(),
-    };
-    match tag::read(&conn, &tag_id) {
-        Ok(tag) => match tag.owner_id {
-            Some(owner_id) => {
-                if tag.is_public || owner_id == follower.owner_id {
-                    // Attempt to create a follower!
-                    match owner_tag::create_owner_tag(&conn, &follower) {
-                        Ok(follower) => Ok(follower),
-                        Err(err) => Err(err.into()),
-                    }
-                } else {
-                    // Disallows following non-owned or non-public tags
-                    Err(ServerError::BadRequest(Some(
-                        "Cannot follow non-owned non-public tags",
-                    )))
-                }
-            }
-            // Disallows following orphaned tags
-            None => Err(ServerError::BadRequest(Some("Cannot follow orphaned tags"))),
-        },
-        Err(err) => Err(err.into()),
-    }
-}
-
-#[delete("/owners/{owner_id}/tags/{tag_id}")]
-pub async fn delete_owner_tag<'a>(
-    pool: web::Data<DbPool>,
-    web::Path((owner_id, tag_id)): web::Path<(i32, i32)>,
-) -> Result<HttpResponse, ServerError<'a>> {
-    /*
-    TODO
-        - auth
-        - use owner_id from path params
-    */
-    let conn = get_conn(pool);
-    let owner = Owner {
-        id: 1,
-        name: "dummy".to_string(),
-    };
-    match tag::read(&conn, &tag_id) {
-        // if tag exist continue
-        Ok(_) => {
-            // if tag exist create a follower instance
-            let follower = Follower {
-                owner_id: owner.id.clone(),
-                tag_id: tag_id.clone(),
-            };
-            match owner_tag::follower_exist(&conn, &follower) {
-                Ok(exists) => {
-                    // if successfully checked if exist
-                    if exists {
-                        match owner_tag::delete(&conn, &follower) {
-                            Ok(_) => Ok(HttpResponse::Ok().body(Body::Empty)),
-                            Err(err) => Err(err.into()),
-                        }
-                    } else {
-                        Err(ServerError::NotFound)
-                    }
-                }
-                Err(err) => Err(err.into()),
-            }
-        }
-        // else return err
         Err(err) => Err(err.into()),
     }
 }
