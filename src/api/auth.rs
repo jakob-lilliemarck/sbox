@@ -1,18 +1,19 @@
-use alcoholic_jwt::{token_kid, validate, Validation, JWKS};
+use awc::Client;
+use jsonwebtoken::{decode, decode_header, jwk, DecodingKey, Validation};
 use sbox::errors::ServerError;
-use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-async fn fetch_jwks(uri: &str) -> Result<JWKS, Box<dyn std::error::Error>> {
-    let res = reqwest::get(uri).await?;
-    let val = res.json::<JWKS>().await?;
-    return Ok(val);
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    company: String,
-    exp: usize,
+/*
+Docs at:
+https://github.com/Keats/jsonwebtoken/blob/master/examples/auth0.rs#L22
+*/
+async fn fetch_jwks(uri: &str) -> Result<jwk::JwkSet, Box<dyn std::error::Error>> {
+    let client = Client::default();
+    let mut res = client.get(uri).send().await?;
+    let body = res.body().await?;
+    let resp_data = std::str::from_utf8(&body).unwrap();
+    let jwks: jwk::JwkSet = serde_json::from_str(resp_data).unwrap();
+    return Ok(jwks);
 }
 
 pub async fn validate_token<'a>(token: &str) -> Result<bool, ServerError<'a>> {
@@ -23,12 +24,29 @@ pub async fn validate_token<'a>(token: &str) -> Result<bool, ServerError<'a>> {
         ".well-known/jwks.json"
     ))
     .await?;
-    let validations = vec![Validation::Issuer(authority), Validation::SubjectPresent];
-    let kid = match token_kid(&token) {
-        Ok(res) => res.expect("failed to decode kid"),
-        Err(_) => return Err(ServerError::JWKSFetchError),
+    let header = decode_header(&token).expect("err decode header - TODO: into ServerError");
+    let kid = match header.kid {
+        Some(kid) => kid,
+        None => return Err(ServerError::Unknown),
     };
-    let jwk = jwks.find(&kid).expect("Specified key not found in set");
-    let res = validate(token, jwk, validations);
-    Ok(res.is_ok())
+    if let Some(j) = jwks.find(&kid) {
+        match j.algorithm {
+            jwk::AlgorithmParameters::RSA(ref rsa) => {
+                let decoding_key = DecodingKey::from_rsa_components(&rsa.n, &rsa.e).unwrap(); // errors?
+                let mut validation = Validation::new(j.common.algorithm.unwrap());
+                validation.validate_exp = false;
+                let decoded_token = decode::<HashMap<String, serde_json::Value>>(
+                    &token,
+                    &decoding_key,
+                    &validation,
+                )
+                .unwrap();
+                println!("DECODED: {:?}", decoded_token);
+            }
+            _ => unreachable!("Should be RSA?"),
+        }
+    } else {
+        return Err(ServerError::Unknown);
+    }
+    Ok(true)
 }
