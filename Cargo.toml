@@ -6,41 +6,22 @@ edition = "2021"
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 [dependencies]
 diesel_migrations = "1.4.0"
-schemars = "0.7"
-okapi = "0.6.0-alpha-1"
-anyhow = "1.0.53"
 celery = "0.4.0-rcn.11"
-log = "0.4"
-env_logger = "0.9"
 actix-web = { version = "3", features=["openssl"] }
 r2d2 = "0.8.9"
 futures = "0.3.21"
 serde_json = "1.0.78"
 serde = "1.0.136"
 derive_more = "0.99.17"
-itertools = "0.10.3"
 actix-web-httpauth = "0.5.1"
-futures-util = "0.3.21"
-alcoholic_jwt = "1.0.1"
-reqwest = { version = "0.11.9",  features = ["json"] }
 jsonwebtoken = "8.0.1"
 awc = "2.0.3"
-actix-rt = "2.6.0"
 dotenv = "0.15.0"
-x509-parser = "0.12.0"
 
-[dependencies.rocket]
-version = "0.5.0-rc.1"
-default-features = false
-features = ["json"]
-
+# get rid of this dependency, use r2d2-postgres or similar instead (r2d2_postgres = "0.18.1")
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"
 features = ["diesel_postgres_pool"]
-
-[dependencies.rocket_okapi]
-version = "0.8.0-alpha-1"
-features = ["swagger", "rapidoc"]
 
 [dependencies.diesel]
 version = "1.4.4"
@@ -51,10 +32,6 @@ version = "1.0.0"
 features = ["full"]
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-[[bin]]
-name = "api_script"
-path = "src/api_script/main.rs"
-
 [[bin]]
 name = "api"
 path = "src/api/main.rs"

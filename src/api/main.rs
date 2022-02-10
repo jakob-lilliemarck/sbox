@@ -5,26 +5,20 @@ extern crate awc;
 extern crate futures;
 extern crate jsonwebtoken;
 extern crate r2d2;
-extern crate reqwest;
 extern crate sbox;
-extern crate x509_parser;
 
 use actix_web::{dev::ServiceRequest, middleware, App, Error, HttpServer};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
-use awc::Client;
 use dotenv;
-use std::io::Cursor;
-use x509_parser::parse_x509_der;
-use x509_parser::pem::{pem_to_der, Pem};
 
 //pub mod data;
 pub mod auth;
 pub mod owners;
 pub mod scripts;
 pub mod tags;
-
+pub mod test;
 /*
 AUTH
 
@@ -60,15 +54,6 @@ async fn validator<'a>(
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    /*
-    static IGCA_PEM: &'static [u8] = include_bytes!("XhGp9DCoxe_Wq-tv3mlT9.pem");
-    let res = pem_to_der(IGCA_PEM);
-    let reader = Cursor::new(IGCA_PEM);
-    let (pem, bytes_read) = Pem::read(reader).expect("Reading PEM failed");
-    let x509 = pem.parse_x509().expect("X.509: decoding DER failed");
-    println!("{:?}", x509);
-    */
-    //assert_eq!(x509.tbs_certificate.version, 2);
     let manager = diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(
         "postgres://sbox:dev@localhost/sbox",
     );
@@ -83,6 +68,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(auth)
             .data(pool.clone())
+            // test
+            .service(test::login)
             // owners
             .service(owners::owner_create)
             .service(owners::create_owner_tag)

@@ -1,4 +1,4 @@
-extern crate anyhow;
+/*extern crate anyhow;
 extern crate celery;
 
 use anyhow::Result;
@@ -25,3 +25,4 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
+*/

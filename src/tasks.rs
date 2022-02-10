@@ -1,4 +1,4 @@
-extern crate celery;
+/*extern crate celery;
 use celery::broker::AMQPBroker;
 use celery::task::TaskResult;
 use rocket::request::{self, FromRequest, Request};
@@ -29,7 +29,7 @@ pub async fn create_app<'a>() -> std::sync::Arc<celery::Celery<AMQPBroker>> {
     .await.expect("Err creating celery app")
 }
 
-/*
+
 Rocket Request guard to send tasks from routes.
 Example usage:
 
@@ -39,7 +39,7 @@ pub async fn read_source(
 ) {
     sender.send(|| task::new(1, 2));
 }
-*/
+
 
 pub struct Sender;
 
@@ -74,4 +74,4 @@ impl OpenApiFromRequest<'static> for Sender {
     ) -> Result<RequestHeaderInput, OpenApiError> {
         Ok(RequestHeaderInput::None)
     }
-}
+}*/
