@@ -17,7 +17,7 @@ table! {
 table! {
     owner (id) {
         id -> Int4,
-        name -> Varchar,
+        external_id -> Varchar,
     }
 }
 

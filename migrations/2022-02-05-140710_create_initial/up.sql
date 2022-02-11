@@ -1,6 +1,6 @@
 CREATE TABLE owner (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(200) NOT NULL
+  external_id VARCHAR NOT NULL -- external user_id used by Auth0 or similar
 );
 
 CREATE TABLE tag (
@@ -52,4 +52,9 @@ CREATE TABLE owner_tag (
   CONSTRAINT pk_owner_tag PRIMARY KEY (owner_id, tag_id),
   FOREIGN KEY (owner_id) REFERENCES owner (id),
   FOREIGN KEY (tag_id) REFERENCES tag (id)
-)
+);
+
+
+-- indexing
+CREATE UNIQUE INDEX idx_owner_external_id
+ON owner (external_id);

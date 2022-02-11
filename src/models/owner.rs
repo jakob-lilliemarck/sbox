@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 #[table_name = "owner"]
 pub struct Owner {
     pub id: i32,
-    pub name: String,
+    pub external_id: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Insertable)]
 #[table_name = "owner"]
 pub struct NewOwner {
-    pub name: String,
+    pub external_id: String,
 }
 
 // TODO - make generic!

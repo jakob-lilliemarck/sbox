@@ -18,18 +18,30 @@ pub mod auth;
 pub mod owners;
 pub mod scripts;
 pub mod tags;
-pub mod test;
+
 /*
-AUTH
+AUTH - todo
+- If an authenticated user does not exist in the owner-table - create a new owner entity.
+- Remove owner endpoints!
+- Better errorhandling
+- Break up auth code and cleanup!
 
-1. recieves a request with a Bearer token
-2. search user table for a user with that token
-    1. If a user is found and the token has not expired validation is OK =>
+DB connection - todo
+- Get rid of dependency on rocket_db_pool lib - use something intended for diesel/actix instead.
 
-    2.  If no user with such a token is found, use the token to fetch USER_ID from Auth0 API
-        1. if a user is returned => UPDATE or CREATE row with id == USER_ID with the current token
-        2. if no user is returned => validation ERR
+API - todo
+- Look through figma & check against spec
+- Remove redundant functionality
+- Consider implementing db methods on model-structs fo flow becomes:
+    - deserialize json to struct
+    - use a method on the struct to perform DB operations -> return updated struct
+    - serialize JSON & return to client app
+- Consider how business-logic rules should work
+    - As methods on the structs?
+    - How to minimize DB reads while keeping readability?
+- Can app.serice calls be pre-grouped and exposed in their respecive file? Would be neat.
 */
+
 async fn validator<'a>(
     req: ServiceRequest,
     credentials: BearerAuth,
@@ -53,6 +65,8 @@ async fn validator<'a>(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let a = answer();
+
     dotenv::dotenv().ok();
     let manager = diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(
         "postgres://sbox:dev@localhost/sbox",

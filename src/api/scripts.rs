@@ -21,7 +21,7 @@ pub async fn get_by_owner_id<'a>(
     /* TODO - auth */
     let this_owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
 
@@ -44,7 +44,7 @@ pub async fn get_by_id<'a>(
     /* TODO - auth */
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     match script::read_tagged(&conn, &script_id) {
@@ -67,7 +67,7 @@ pub async fn create<'a>(
     /* TODO - auth */
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     match script::create_tagged(&conn, &new_tagged_script, &owner.id) {
@@ -89,7 +89,7 @@ pub async fn update<'a>(
     */
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     match script::read_tagged(&conn, &script_id) {
@@ -120,7 +120,7 @@ pub async fn delete<'a>(
     */
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     match script::read(&conn, &script_id) {
@@ -154,7 +154,7 @@ pub async fn create_script_tag<'a>(
     /* TODO - auth */
     let this_owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     let is_output = match tag_qs.is_output {
@@ -197,7 +197,7 @@ pub async fn delete_script_tag<'a>(
     /* TODO - auth */
     let this_owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     match { script::read(&conn, &script_id) } {

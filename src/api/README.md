@@ -10,7 +10,6 @@
 - Create functionality that conditionally run some code
 - Rulesets should use pre-loaded models - no database/ORM calls
 - Should allow custom error messages
-
 ### Deploy
 - Github workflow
 

@@ -38,7 +38,7 @@ pub async fn create_owner_tag<'a>(
     let conn = get_conn(pool);
     let owner = Owner {
         id: 2,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let follower = Follower {
         owner_id: owner.id.clone(),
@@ -80,7 +80,7 @@ pub async fn delete_owner_tag<'a>(
     let conn = get_conn(pool);
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy",
     };
     match tag::read(&conn, &tag_id) {
         // if tag exist continue

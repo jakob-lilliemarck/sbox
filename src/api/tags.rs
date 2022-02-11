@@ -25,7 +25,7 @@ pub async fn tags_get_by_owner<'a>(
     /* TODO - auth*/
     let this_owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
     if this_owner.id != *owner_id {
@@ -49,7 +49,7 @@ pub async fn tags_create<'a>(
     /* TODO - auth*/
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
 
@@ -76,7 +76,7 @@ pub async fn tags_update<'a>(
     /* TODO - auth*/
     let this_owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     let conn = get_conn(pool);
 
@@ -116,7 +116,7 @@ pub async fn tags_delete<'a>(
     let conn = get_conn(pool);
     let owner = Owner {
         id: 1,
-        name: "dummy".to_string(),
+        external_id: "dummy".to_string(),
     };
     match tag::read(&conn, &tag_id) {
         Ok(tag) => match tag.owner_id {
