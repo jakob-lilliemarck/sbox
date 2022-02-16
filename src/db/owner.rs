@@ -13,3 +13,13 @@ pub fn read(conn: &diesel::PgConnection, owner_id: &i32) -> Result<Owner, Error>
     use crate::schema::owner::dsl::*;
     owner.find(owner_id).first::<Owner>(conn)
 }
+
+pub fn read_from_external_id(
+    conn: &diesel::PgConnection,
+    id_external: &String,
+) -> Result<Owner, Error> {
+    use crate::schema::owner::dsl::*;
+    owner
+        .filter(external_id.eq(id_external))
+        .get_result::<Owner>(conn)
+}

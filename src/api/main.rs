@@ -7,17 +7,25 @@ extern crate jsonwebtoken;
 extern crate r2d2;
 extern crate sbox;
 
-use actix_web::{dev::ServiceRequest, middleware, App, Error, HttpServer};
+//pub mod data;
+//pub mod auth;
+//pub mod auth2;
+pub mod owners;
+pub mod scripts;
+pub mod tags;
+
+use actix_web::{
+    dev::Extensions,
+    dev::{Service, ServiceRequest},
+    middleware, web,
+    web::ReqData,
+    App, Error, FromRequest, HttpMessage, HttpRequest, HttpServer,
+};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv;
-
-//pub mod data;
-pub mod auth;
-pub mod owners;
-pub mod scripts;
-pub mod tags;
+use futures::future::FutureExt;
 
 /*
 AUTH - todo
@@ -32,7 +40,7 @@ DB connection - todo
 API - todo
 - Look through figma & check against spec
 - Remove redundant functionality
-- Consider implementing db methods on model-structs fo flow becomes:
+- Consider implementing db methods on model-sValidationtructs fo flow becomes:
     - deserialize json to struct
     - use a method on the struct to perform DB operations -> return updated struct
     - serialize JSON & return to client app
@@ -41,7 +49,7 @@ API - todo
     - How to minimize DB reads while keeping readability?
 - Can app.serice calls be pre-grouped and exposed in their respecive file? Would be neat.
 */
-
+/*
 async fn validator<'a>(
     req: ServiceRequest,
     credentials: BearerAuth,
@@ -62,11 +70,10 @@ async fn validator<'a>(
         Err(_) => Err(AuthenticationError::from(config).into()),
     }
 }
+*/
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let a = answer();
-
     dotenv::dotenv().ok();
     let manager = diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(
         "postgres://sbox:dev@localhost/sbox",
@@ -77,13 +84,21 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create db pool.");
 
     HttpServer::new(move || {
-        let auth = HttpAuthentication::bearer(validator);
+        //let auth = HttpAuthentication::bearer(auth2::validator);
         App::new()
-            .wrap(middleware::Logger::default())
-            .wrap(auth)
             .data(pool.clone())
-            // test
-            .service(test::login)
+            .wrap(sbox::middleware::auth::Auth {
+                jwks_expire: std::time::Duration::new(60, 0),
+                jwks_url: "https://dev-u2n9dnr8.us.auth0.com/.well-known/jwks.json",
+            })
+            //.wrap(middleware::Logger::default())
+            //.wrap(auth)
+            /*.wrap_fn(|req, srv| {
+                req.extensions_mut().insert(Test {
+                    val: "hej".to_string(),
+                });
+                srv.call(req).map(|res| res)
+            })*/
             // owners
             .service(owners::owner_create)
             .service(owners::create_owner_tag)
@@ -91,7 +106,7 @@ async fn main() -> std::io::Result<()> {
             // tags
             .service(tags::tags_get_by_owner)
             .service(tags::tags_create)
-            .service(tags::tags_update)
+            //.service(tags::tags_update)
             .service(tags::tags_delete)
             // scripts
             .service(scripts::create)

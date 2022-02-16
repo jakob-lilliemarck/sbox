@@ -80,7 +80,7 @@ pub async fn delete_owner_tag<'a>(
     let conn = get_conn(pool);
     let owner = Owner {
         id: 1,
-        external_id: "dummy",
+        external_id: "dummy".to_string(),
     };
     match tag::read(&conn, &tag_id) {
         // if tag exist continue

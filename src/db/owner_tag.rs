@@ -25,14 +25,14 @@ pub fn read_public_tag_by_owner(
         .filter(schema::tag::is_public.eq(true))
         .load::<Tag>(conn)
 }
-
+/*
 pub fn read_owner_by_tag(conn: &diesel::PgConnection, tag: &Tag) -> Result<Vec<Owner>, Error> {
     Follower::belonging_to(tag)
         .inner_join(schema::owner::table)
         .select(schema::owner::all_columns)
         .load::<Owner>(conn)
 }
-
+*/
 pub fn read_tag_ids_by_owner(conn: &diesel::PgConnection, owner: &Owner) -> Result<IdList, Error> {
     match Follower::belonging_to(owner)
         .select(schema::owner_tag::owner_id)

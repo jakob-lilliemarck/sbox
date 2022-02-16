@@ -6,6 +6,7 @@ use sbox::errors::ServerError;
 use sbox::models::owner::Owner;
 use sbox::models::tag::{NewTag, Tag, TagList, UpdateTag};
 use sbox::utils::{get_conn, DbPool};
+
 /*
 On tag ownership & public tags:
  - On tag deletion (orphaning), associated scripts that use the tag for tagging outputs should also be orphaned
@@ -21,7 +22,10 @@ If a public tag has followers other than the owner:
 pub async fn tags_get_by_owner<'a>(
     pool: web::Data<DbPool>,
     owner_id: web::Path<i32>,
+    test: web::ReqData<&str>,
 ) -> Result<TagList, ServerError<'a>> {
+    println!("TEST FROM MIDDLEWARE: {:?}", test);
+
     /* TODO - auth*/
     let this_owner = Owner {
         id: 1,
@@ -66,7 +70,7 @@ pub async fn tags_create<'a>(
         },
     }
 }
-
+/*
 #[put("/tags/{id}")]
 pub async fn tags_update<'a>(
     pool: web::Data<DbPool>,
@@ -106,7 +110,7 @@ pub async fn tags_update<'a>(
         Err(err) => Err(err.into()),
     }
 }
-
+*/
 #[delete("/tags/{id}")]
 pub async fn tags_delete<'a>(
     pool: web::Data<DbPool>,

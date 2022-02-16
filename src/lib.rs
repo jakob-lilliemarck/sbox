@@ -3,8 +3,8 @@ extern crate diesel;
 
 pub mod db;
 pub mod errors;
+pub mod middleware;
 pub mod models;
-pub mod rules;
 pub mod schema;
 pub mod tasks;
 pub mod utils;
