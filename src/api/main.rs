@@ -89,6 +89,7 @@ async fn main() -> std::io::Result<()> {
             .data(pool.clone())
             .wrap(sbox::middleware::auth::Auth {
                 jwks_expire: std::time::Duration::new(60, 0),
+                jwks_timestamp: std::time::UNIX_EPOCH,
                 jwks_url: "https://dev-u2n9dnr8.us.auth0.com/.well-known/jwks.json",
             })
             //.wrap(middleware::Logger::default())
